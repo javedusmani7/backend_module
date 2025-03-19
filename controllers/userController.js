@@ -11,7 +11,7 @@ export const register = asyncHandler(async (req, res) => {
     if (error) {
       throw new ApiError(statusCode.USER_ERROR, error.details[0].message, error.details);
     }
-    const result = await registerService(req, res);
+    const result = await registerService(req);
     res.status(result.statusCode).json(result);
 });
 
@@ -21,7 +21,7 @@ export const login = asyncHandler( async (req, res) => {
     if (error) {
       throw new ApiError(statusCode.USER_ERROR, error.details[0].message, error.details);
     }
-    const result = await loginService(req, res);
+    const result = await loginService(req);
     res.status(result.statusCode).json(result);
 });
 
