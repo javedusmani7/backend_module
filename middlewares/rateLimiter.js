@@ -1,17 +1,9 @@
-const { RateLimiterMemory } = require('rate-limiter-flexible');
+import rateLimit from 'express-rate-limit';
 
-const rateLimiter = new RateLimiterMemory({
-  points: 5, // 5 requests
-  duration: 1, // per second
+export const apiLimiter = rateLimit({
+  windowMs: 1000, // 1 secoond
+  max: 2,  // Limit each IP to 5 requests per windowMs
+  message: {
+    message: 'Too many requests from this IP, please try again after 1 second',
+  },
 });
-
-const rateLimit = async (req, res, next) => {
-  try {
-    await rateLimiter.consume(req.ip); // Consume 1 point per request based on IP
-    next();
-  } catch (rejRes) {
-    res.status(429).json({ message: 'Too many requests, please try again later.' });
-  }
-};
-
-module.exports = rateLimit;
