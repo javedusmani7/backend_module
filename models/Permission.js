@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const PermissionSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User", // 🔹 Reference to the User model
+    ref: "User", //  Reference to the User model
     required: true,
   },
   moduleId: {
@@ -17,7 +17,7 @@ const PermissionSchema = new mongoose.Schema({
     delete: { type: Boolean, default: false },
   },
   submodules: {
-    type: Object, // 🔹 Stores submodule permissions dynamically
+    type: Object, //  Stores submodule permissions dynamically
     default: {},
   },
 });
