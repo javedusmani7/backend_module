@@ -22,6 +22,6 @@ export const loginService = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) throw new ApiResponse(statusCode.UNAUTHORIZED, null, "Invalid credentials");
 
-    const token = jwt.sign(user, process.env.TOKEN_SECRET, { expiresIn:"1h" });
+    const token = jwt.sign(user.toObject(), process.env.TOKEN_SECRET, { expiresIn: "1h" });
     return new ApiResponse(statusCode.OK, { token, user }, "User logged in successfully");
 }
