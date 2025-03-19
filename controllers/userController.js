@@ -1,10 +1,18 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { ApiError } from "../utils/apiError.js";
+import { statusCode } from "../config/config.js";
+import { userRegistrationSchema, userLoginSchema } from "../validation/userValidation.js";
 
-// Register a new user
 export const register = async (req, res) => {
   try {
+    const { error } = userRegistrationSchema.validate(req.body);
+
+    if (error) {      
+      throw new ApiError(statusCode.USER_ERROR, error.details[0].message,error.details);
+    }
+
     const { name, email, password, role } = req.body;
 
     const existingUser = await User.findOne({ email });
@@ -18,15 +26,20 @@ export const register = async (req, res) => {
 
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
-    res.status(500).json({ message: "Server Error", error: error.message });
+    res.status(500).json({ message: "Server Error", error: error.message
+     });
   }
 };
 
 // Login user
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { error } = userLoginSchema.validate(req.body);
 
+    if (error) {      
+      throw new ApiError(statusCode.USER_ERROR, error.details[0].message,error.details);
+    }
+    const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 

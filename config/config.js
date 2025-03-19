@@ -4,7 +4,7 @@ export const corsOptions = {
 
 export const statusCode = {
     "OK" : 200,
-    "USER ERROR" : 400,
-    "NOT FOUND" : 404,
-    "INTERNAL ERROR" : 500
+    "USER_ERROR" : 400,
+    "NOT_FOUND" : 404,
+    "INTERNAL_ERROR" : 500
 }
