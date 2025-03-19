@@ -1,4 +1,4 @@
-import { ApiError } from "../utils/apiError.js";
+import { ApiError } from "../utils/ApiError.js";
 import { statusCode } from "../config/config.js";
 import { userRegistrationSchema, userLoginSchema } from "../validation/userValidation.js";
 import { registerService, loginService } from "../services/user.js";
