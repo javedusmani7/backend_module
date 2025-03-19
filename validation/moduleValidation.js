@@ -1,7 +1,7 @@
 import Joi from "joi";
 
 export const getModulesWithPermissionsSchema = Joi.object({
-  userId: Joi.string().hex().length(50).required(), 
+  userId: Joi.string().hex().length(50).required(),
 });
 
 
