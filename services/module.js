@@ -1,27 +1,25 @@
 import Module from "../models/Module.js";
 import Permission from "../models/Permission.js";
 import User from "../models/User.js";
+import { ApiError } from "../utils/ApiError.js";
+import { statusCode } from "../config/config.js";
+import { ApiResponse } from "../utils/apiResponse.js";
 
 /**
- * Get modules with permissions for a specific user
- * @param {string} userId - The user ID
- * @returns {Promise<object[]>} - List of modules with permissions
+ * Fetch modules with permissions assigned to the user
  */
 export const getModulesWithPermissionsService = async (userId) => {
-  // Fetch user and verify existence
   const user = await User.findById(userId);
   if (!user) {
-    throw new Error("User not found");
+    console.log(statusCode.NOT_FOUND);
+    
+    throw new ApiError(statusCode.NOT_FOUND, null, "User not found");
   }
 
-  // Fetch permissions assigned to the user
   const userPermissions = await Permission.find({ userId }).lean();
-
-  // Fetch all modules
   const modules = await Module.find({}).lean();
 
-  // Map permissions to modules and submodules
-  return modules.map((module) => {
+  const result = modules.map((module) => {
     const modulePermission = userPermissions.find(
       (perm) => perm.moduleId.toString() === module._id.toString()
     );
@@ -31,7 +29,7 @@ export const getModulesWithPermissionsService = async (userId) => {
       name: module.name,
       permissions: modulePermission
         ? modulePermission.permissions
-        : { read: false, write: false, delete: false }, // Default: no permissions
+        : { read: false, write: false, delete: false }, // Default permissions
       expanded: false,
       submodules: module.submodules.map((sub) => ({
         name: sub.name,
@@ -39,20 +37,22 @@ export const getModulesWithPermissionsService = async (userId) => {
           read: false,
           write: false,
           delete: false,
-        }, // Get submodule permissions if available
+        }, // Default submodule permissions
       })),
     };
   });
+  return new ApiResponse(statusCode.OK, result, "Modules with permissions fetched successfully");
 };
 
 /**
- * Update user permissions for modules and submodules
- * @param {string} userId - The user ID
- * @param {Array} modules - List of modules with permissions
- * @returns {Promise<object[]>} - Updated permissions response
+ * Update permissions for a user
  */
 export const updatePermissionsService = async (userId, modules) => {
-  let updatedModules = []; // Store updated module details
+  if (!modules || !Array.isArray(modules) || modules.length === 0) {
+    throw new ApiError(statusCode.USER_ERROR, "Modules array is required");
+  }
+
+  let updatedModules = [];
 
   for (const module of modules) {
     const { moduleId, permissions, submodules } = module;
@@ -63,19 +63,13 @@ export const updatePermissionsService = async (userId, modules) => {
       permission = new Permission({
         userId,
         moduleId,
-        permissions: { read: false, write: false, delete: false }, // Default permissions
-        submodules: {}, // Initialize submodules
+        permissions: { read: false, write: false, delete: false },
+        submodules: {},
       });
     }
 
-    if (!permission.submodules) {
-      permission.submodules = {};
-    }
-
-    // Update parent module permissions
     permission.permissions = permissions;
 
-    // Update submodules' permissions
     if (submodules && Array.isArray(submodules)) {
       for (const sub of submodules) {
         permission.submodules[sub.name] = sub.permissions;

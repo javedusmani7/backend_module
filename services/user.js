@@ -25,3 +25,13 @@ export const loginService = async (req, res) => {
     const token = jwt.sign(user.toObject(), process.env.TOKEN_SECRET, { expiresIn: "1h" });
     return new ApiResponse(statusCode.OK, { token, user }, "User logged in successfully");
 }
+
+export const getRolesService = async () => {
+    // Fetch distinct roles from the User collection
+    const roles = await User.distinct("role");
+    
+    return roles.map((role) => ({
+      role,
+      name: role === 1 ? "Superadmin" : role === 2 ? "Admin" : "Moderator",
+    }));
+  };
