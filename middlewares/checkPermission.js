@@ -1,9 +1,12 @@
-import { Role } from "../models/role.model";
-import { Permission } from "../models/permission.model";
-import { Module } from "../models/module.model";
-import { apiError } from "../utils/apiError";
-import { statusCode } from "../config/config";
-import { asyncHandler } from "../utils/asyncHandler";
+// import { Role } from "../models/Role.js";
+// import { Permission } from "../models/Permission.js";
+// import { Module } from "../models/Module.js";
+import { apiError } from "../utils/apiError.js";
+import { statusCode } from "../config/config.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import Module from "../models/Module.js";
+import Permission from "../models/Permission.js";
+import Role from "../models/Role.js";
 
 export const checkPermission = asyncHandler(async (req, res, next) => {
     const user = req.user;
@@ -16,7 +19,7 @@ export const checkPermission = asyncHandler(async (req, res, next) => {
     const permissions = await Permission.findOne({ userId: user._id });
     const moduleData = await Module.findById(moduleId);
     if (!moduleData) {
-        return next(new apiError(statusCode.NOT_FOUND, "Module not found"));
+       throw new apiError(statusCode.NOT_FOUND, "Module not found");
     }
     console.log(object);
 
@@ -25,9 +28,9 @@ export const checkPermission = asyncHandler(async (req, res, next) => {
             if (permissions[subModule].action) {
                 next();
             }
-            return next(new apiError(statusCode.UNAUTHORIZED, "User does not have permission to perform this action"));
+            throw new apiError(statusCode.UNAUTHORIZED, "User does not have permission to perform this action");
         }
         next();
     }
-    return next(new apiError(statusCode.UNAUTHORIZED, "User does not have permission to perform this action"));
+    throw new apiError(statusCode.UNAUTHORIZED, "User does not have permission to perform this action");
 });
