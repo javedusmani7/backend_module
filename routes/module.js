@@ -6,7 +6,7 @@ import { verifyJWT } from "../middlewares/auth.js";
 const router = express.Router();
 router.use(apiLimiter);
 
-router.get("/get", verifyJWT, getModulesWithPermissions);
+router.get("/role/permissions", verifyJWT, getModulesWithPermissions);
 router.post("/update", updatePermissions);
 
 export default router;
