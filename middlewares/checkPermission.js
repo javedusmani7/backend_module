@@ -18,6 +18,7 @@ export const checkPermission = asyncHandler(async (req, res, next) => {
     if (!moduleData) {
         return next(new apiError(statusCode.NOT_FOUND, "Module not found"));
     }
+    console.log(object);
 
     if (permissions[action]) {
         if (subModule) {
