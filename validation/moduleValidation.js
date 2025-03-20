@@ -1,29 +1,14 @@
 import Joi from "joi";
 
 
-export const updatePermissionsSchema = Joi.object({
-  userId: Joi.string().hex().required(),
-  modules: Joi.array()
-    .items(
-      Joi.object({
-        moduleId: Joi.string().hex().length(24).required(),
-        permissions: Joi.object({
-          read: Joi.boolean().required(),
-          write: Joi.boolean().required(),
-          delete: Joi.boolean().required(),
-        }).required(),
-        submodules: Joi.array().items(
-          Joi.object({
-            name: Joi.string().required(),
-            permissions: Joi.object({
-              read: Joi.boolean().required(),
-              write: Joi.boolean().required(),
-              delete: Joi.boolean().required(),
-            }).required(),
-          })
-        ),
-      })
-    )
-    .min(1)
-    .required(),
+export const updatePermissionsSchema =  Joi.object({
+  userId: Joi.string().hex().length(24).required(),
+  moduleId: Joi.string().hex().length(24).required(),
+  permissions: Joi.object({
+    create: Joi.boolean().required(),
+    read: Joi.boolean().required(), // Allow viewing data
+    update: Joi.boolean().required(), // Allow modifying data
+    delete: Joi.boolean().required(), // Allow removing data
+  }).required(),
+  submodules: Joi.object().required(),
 });

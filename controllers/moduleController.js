@@ -3,7 +3,6 @@ import { getModulesWithPermissionsService, updatePermissionsService } from "../s
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { statusCode } from "../config/config.js";
-import { canModifyRole } from "../utils/roleUtils.js";
 import User from "../models/User.js";
 
 /**
@@ -29,33 +28,9 @@ export const updatePermissions = asyncHandler(async (req, res) => {
   if (error) {
     throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
   }
+  const result = await updatePermissionsService(req);
+  res.status(result.statusCode).json(result);
 
-  const { userId, modules } = req.body;
-
-  // Fetch the logged-in user's role
-  const requestingUser = await User.findById(req.user.id).select("roleId");
-  if (!requestingUser) {
-    throw new apiError(statusCode.UNAUTHORIZED, "Unauthorized user");
-  }
-
-  // Fetch the target user's role
-  const targetUser = await User.findById(userId).select("roleId");
-  if (!targetUser) {
-    throw new apiError(statusCode.USER_ERROR, "Target user not found");
-  }
-
-  // Role-based authorization check
-  if (!canModifyRole(requestingUser.role, targetUser.roleId)) {
-    throw new apiError(statusCode.UNAUTHORIZED, "You do not have permission to modify this user's roles");
-  }
-
-  // Proceed with updating permissions
-  const updatedModules = await updatePermissionsService(userId, modules);
-
-  res.json({
-    message: "Permissions updated successfully",
-    updatedModules,
-  });
 });
 
 

@@ -47,43 +47,63 @@ export const getModulesWithPermissionsService = async (userId) => {
 /**
  * Update permissions for a user
  */
-export const updatePermissionsService = async (userId, modules) => {
-  if (!modules || !Array.isArray(modules) || modules.length === 0) {
-    throw new apiError(statusCode.USER_ERROR, "Modules array is required");
-  }
+// export const updatePermissionsService = async (userId, modules) => {
+//   if (!modules || !Array.isArray(modules) || modules.length === 0) {
+//     throw new apiError(statusCode.USER_ERROR, "Modules array is required");
+//   }
 
-  let updatedModules = [];
+//   let updatedModules = [];
 
-  for (const module of modules) {
-    const { moduleId, permissions, submodules } = module;
+//   for (const module of modules) {
+//     const { moduleId, permissions, submodules } = module;
 
-    let permission = await Permission.findOne({ userId, moduleId });
+//     let permission = await Permission.findOne({ userId, moduleId });
 
-    if (!permission) {
-      permission = new Permission({
-        userId,
-        moduleId,
-        permissions: { create: false, read: false, update: false, delete: false },
-        submodules: {},
-      });
+//     if (!permission) {
+//       permission = new Permission({
+//         userId,
+//         moduleId,
+//         permissions: { create: false, read: false, update: false, delete: false },
+//         submodules: {},
+//       });
+//     }
+
+//     permission.permissions = permissions;
+
+//     if (submodules && Array.isArray(submodules)) {
+//       for (const sub of submodules) {
+//         permission.submodules[sub.name] = sub.permissions;
+//       }
+//     }
+
+//     await permission.save();
+//     updatedModules.push({
+//       moduleId,
+//       updatedPermissions: permission.permissions,
+//       updatedSubmodules: permission.submodules,
+//     });
+//   }
+
+//   return updatedModules;
+// };
+
+export const updatePermissionsService = async (req) => {
+  const data = req.body;
+
+  const updatedPermission = await Permission.findOneAndUpdate(
+    { userId: data.userId }, // Query to find the record
+    {
+      $set: {
+        userId: data.userId,
+        permissions: data.permissions,
+        submodules: data.submodules,
+      },
+    },
+    {
+      new: true, 
+      upsert: true,
     }
+  );
 
-    permission.permissions = permissions;
-
-    if (submodules && Array.isArray(submodules)) {
-      for (const sub of submodules) {
-        permission.submodules[sub.name] = sub.permissions;
-      }
-    }
-
-    await permission.save();
-    updatedModules.push({
-      moduleId,
-      updatedPermissions: permission.permissions,
-      updatedSubmodules: permission.submodules,
-    });
-  }
-
-  return updatedModules;
-};
-
+  return new ApiResponse(statusCode.OK, updatedPermission, "Permissions updated successfully");
+}
