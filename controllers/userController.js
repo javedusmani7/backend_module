@@ -2,7 +2,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { statusCode } from "../config/config.js";
 import { userRegistrationSchema, userLoginSchema } from "../validation/userValidation.js";
-import { registerService, loginService } from "../services/user.js";
+import { registerService, loginService, getRolesService } from "../services/user.js";
 
 export const register = asyncHandler(async (req, res) => {
 
@@ -28,11 +28,13 @@ export const login = asyncHandler( async (req, res) => {
 //fetch roles
 
 export const getRoles = asyncHandler(async (req, res) => {
-  const result = await getRolesService();
-  
-  if (!result || result.length === 0) {
+  const roles = await getRolesService();
+
+  if (!roles || roles.length === 0) {
     throw new ApiError(statusCode.NOT_FOUND, "No roles found");
   }
 
-  res.status(statusCode.OK).json(result);
+  res.status(statusCode.OK).json(roles);
 });
+
+

@@ -3,6 +3,7 @@ import { statusCode } from "../config/config.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import { encryptPassword, comparePassword } from "../middlewares/encryption.js";
 import User from "../models/User.js";
+import Role from "../models/Role.js";
 
 export const registerService = async (req) => {
     const { name, email, password, role } = req.body;
@@ -23,12 +24,11 @@ export const loginService = async (req) => {
     return new ApiResponse(statusCode.OK, { token, user }, "User logged in successfully");
 }
 
+
+
 export const getRolesService = async () => {
-    // Fetch distinct roles from the User collection
-    const roles = await User.distinct("role");
-    
-    return roles.map((role) => ({
-      role,
-      name: role === 1 ? "Superadmin" : role === 2 ? "Admin" : "Moderator",
-    }));
-  };
+  // Fetch all roles from Role model
+  const roles = await Role.find({}, { _id: 1, roleId: 1, roleName: 1 });
+
+  return roles;
+};
