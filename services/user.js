@@ -12,7 +12,8 @@ export const registerService = async (req) => {
     const existingUser = await User.findOne({ email });    
     if (existingUser) return new ApiResponse(statusCode.ALREADY_EXISTS, existingUser, "User already exists");
     const hashedPassword = await encryptPassword(password);
-    const newUser = await new User({ name, email, password: hashedPassword, role }).save();    
+    const objectId = new mongoose.Types.ObjectId(role);
+    const newUser = await new User({ name, email, password: hashedPassword, role: objectId }).save();    
     return new ApiResponse(statusCode.CREATED, newUser, "User registered successfully");
 };
 

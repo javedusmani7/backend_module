@@ -63,7 +63,7 @@ export const updatePermissionsService = async (userId, modules) => {
       permission = new Permission({
         userId,
         moduleId,
-        permissions: { read: false, write: false, delete: false },
+        permissions: { create: false, read: false, update: false, delete: false },
         submodules: {},
       });
     }
@@ -86,3 +86,4 @@ export const updatePermissionsService = async (userId, modules) => {
 
   return updatedModules;
 };
+

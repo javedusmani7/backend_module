@@ -6,12 +6,13 @@ import { registerService, loginService, getRolesService } from "../services/user
 
 export const register = asyncHandler(async (req, res) => {
 
-    const { error } = userRegistrationSchema.validate(req.body);
-    if (error) {
-      throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
-    }
-    const result = await registerService(req);
-    res.status(result.statusCode).json(result);
+  const { error } = userRegistrationSchema.validate(req.body);
+
+  if (error) {
+    throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
+  }
+  const result = await registerService(req);
+  res.status(result.statusCode).json(result);
 });
 
 // Login user
@@ -21,7 +22,6 @@ export const login = asyncHandler(async (req, res) => {
     throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
   }
   const result = await loginService(req);
-
   if (result.data && result.data.token) {
     res.cookie('authToken', result.data.token, {
       httpOnly: true,

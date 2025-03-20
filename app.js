@@ -18,11 +18,10 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors(corsOptions));
 app.use(cookieParser());
+app.use(errorHandler);
 // app.use(responseEncrypt);;
 
 app.use("/api/users", userRoutes);
-app.use("/api/modules", moduleRoutes);
-app.use(errorHandler);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
