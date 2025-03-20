@@ -5,8 +5,7 @@ export class ApiResponse {
     // this.data = encryptResponse(JSON.stringify(data));
     this.data = data;
     this.message = message;
-    // this.success = statusCode < 400;
-    console.log("ApiResponse -> constructor -> this.success", this.success);
+    this.success = statusCode < 400;
     
   }
 }
