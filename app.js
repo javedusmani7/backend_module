@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-
+import cookieParser from 'cookie-parser';
 import { corsOptions } from './config/config.js';
 import { connectDB } from './config/db.js';
 import userRoutes from "./routes/user.js";
@@ -9,18 +9,16 @@ import moduleRoutes from "./routes/module.js";
 import responseEncrypt from './middlewares/responseEncrypt.js';
 
 dotenv.config();
+connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-connectDB();
+
 app.use(express.json());
 app.use(cors(corsOptions));
-// app.use(responseEncrypt);
-app.get('/', (req, res) => {
-    res.send('Hello, World!');
-});
+app.use(cookieParser());
+// app.use(responseEncrypt);;
 
-// Routes
 app.use("/api/users", userRoutes);
 app.use("/api/modules", moduleRoutes);
 
