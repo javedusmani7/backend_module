@@ -34,7 +34,7 @@ export const getRoles = asyncHandler(async (req, res) => {
     throw new apiError(statusCode.NOT_FOUND, "No roles found");
   }
 
-  res.status(statusCode.OK).json(roles);
+  res.status(statusCode.OK).json(result);
 });
 
 
