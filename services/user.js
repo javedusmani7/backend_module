@@ -5,6 +5,7 @@ import { apiError } from "../utils/apiError.js";
 import { encryptPassword, comparePassword } from "../middlewares/encryption.js";
 import User from "../models/User.js";
 import Role from "../models/Role.js";
+import mongoose from "mongoose";
 
 export const registerService = async (req) => {
     const { name, email, password, role } = req.body;
