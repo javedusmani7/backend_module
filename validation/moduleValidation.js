@@ -2,7 +2,7 @@ import Joi from "joi";
 
 
 export const updatePermissionsSchema = Joi.object({
-  userId: Joi.string().hex().length(50).required(),
+  userId: Joi.string().hex().required(),
   modules: Joi.array()
     .items(
       Joi.object({

@@ -7,7 +7,8 @@ const router = express.Router();
 router.use(apiLimiter);
 
 router.get("/role/permissions", verifyJWT, getModulesWithPermissions);
-router.post("/update", updatePermissions);
+router.post("/role/permissions", verifyJWT, updatePermissions);
+
 
 export default router;
 
