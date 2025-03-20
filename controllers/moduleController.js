@@ -45,7 +45,7 @@ export const updatePermissions = asyncHandler(async (req, res) => {
   }
 
   // Role-based authorization check
-  if (!canModifyRole(requestingUser.roleId, targetUser.roleId)) {
+  if (!canModifyRole(requestingUser.role, targetUser.roleId)) {
     throw new apiError(statusCode.UNAUTHORIZED, "You do not have permission to modify this user's roles");
   }
 
