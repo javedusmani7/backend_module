@@ -1,7 +1,7 @@
 import {  updatePermissionsSchema } from "../validation/moduleValidation.js";
 import { getModulesWithPermissionsService, updatePermissionsService } from "../services/module.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { ApiError } from "../utils/ApiError.js";
+import { apiError } from "../utils/apiError.js";
 import { statusCode } from "../config/config.js";
 
 /**
@@ -11,7 +11,7 @@ export const getModulesWithPermissions = asyncHandler(async (req, res) => {
   const userId = req.user._id; // Get user ID from authentication middleware
 
   if (!userId) {
-    throw new ApiError(statusCode.USER_ERROR, "User ID is required");
+    throw new apiError(statusCode.USER_ERROR, "User ID is required");
   }
  
 
@@ -25,7 +25,7 @@ export const getModulesWithPermissions = asyncHandler(async (req, res) => {
 export const updatePermissions = asyncHandler(async (req, res) => {
   const { error } = updatePermissionsSchema.validate(req.body);
   if (error) {
-    throw new ApiError(statusCode.USER_ERROR, error.details[0].message, error.details);
+    throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
   }
 
   const { userId, modules } = req.body;

@@ -1,7 +1,7 @@
 import Module from "../models/Module.js";
 import Permission from "../models/Permission.js";
 import User from "../models/User.js";
-import { ApiError } from "../utils/ApiError.js";
+import { apiError } from "../utils/apiError.js";
 import { statusCode } from "../config/config.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 
@@ -13,7 +13,7 @@ export const getModulesWithPermissionsService = async (userId) => {
   if (!user) {
     console.log(statusCode.NOT_FOUND);
     
-    throw new ApiError(statusCode.NOT_FOUND, null, "User not found");
+    throw new apiError(statusCode.NOT_FOUND, null, "User not found");
   }
 
   const userPermissions = await Permission.find({ userId }).lean();
@@ -49,7 +49,7 @@ export const getModulesWithPermissionsService = async (userId) => {
  */
 export const updatePermissionsService = async (userId, modules) => {
   if (!modules || !Array.isArray(modules) || modules.length === 0) {
-    throw new ApiError(statusCode.USER_ERROR, "Modules array is required");
+    throw new apiError(statusCode.USER_ERROR, "Modules array is required");
   }
 
   let updatedModules = [];
