@@ -7,7 +7,6 @@ import { registerService, loginService, getRolesService } from "../services/user
 export const register = asyncHandler(async (req, res) => {
 
     const { error } = userRegistrationSchema.validate(req.body);
-
     if (error) {
       throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
     }
@@ -16,20 +15,29 @@ export const register = asyncHandler(async (req, res) => {
 });
 
 // Login user
-export const login = asyncHandler( async (req, res) => {
-    const { error } = userLoginSchema.validate(req.body);
-    if (error) {
-      throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
-    }
-    const result = await loginService(req);
-    res.status(result.statusCode).json(result);
+export const login = asyncHandler(async (req, res) => {
+  const { error } = userLoginSchema.validate(req.body);
+  if (error) {
+    throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
+  }
+  const result = await loginService(req);
+  res.cookie('authToken', result.data.token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: 'strict',
+  });
+  if (result.data && result.data.token) {
+    delete result.data.token;
+  }
+  res.status(result.statusCode).json(result);
 });
 
 //fetch roles
 
 export const getRoles = asyncHandler(async (req, res) => {
   const result = await getRolesService();
-  
+
   if (!result || result.length === 0) {
     throw new apiError(statusCode.NOT_FOUND, "No roles found");
   }
