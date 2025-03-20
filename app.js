@@ -6,6 +6,7 @@ import { corsOptions } from './config/config.js';
 import { connectDB } from './config/db.js';
 import userRoutes from "./routes/user.js";
 import moduleRoutes from "./routes/module.js";
+import { errorHandler } from './utils/asyncHandler.js';
 import responseEncrypt from './middlewares/responseEncrypt.js';
 
 dotenv.config();
@@ -21,6 +22,7 @@ app.use(cookieParser());
 
 app.use("/api/users", userRoutes);
 app.use("/api/modules", moduleRoutes);
+app.use(errorHandler);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

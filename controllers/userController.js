@@ -22,13 +22,14 @@ export const login = asyncHandler(async (req, res) => {
     throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
   }
   const result = await loginService(req);
-  res.cookie('authToken', result.data.token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 24 * 60 * 60 * 1000,
-    sameSite: 'strict',
-  });
+
   if (result.data && result.data.token) {
+    res.cookie('authToken', result.data.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: 'strict',
+    });
     delete result.data.token;
   }
   res.status(result.statusCode).json(result);
