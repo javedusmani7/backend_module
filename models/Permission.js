@@ -3,25 +3,25 @@ import mongoose from "mongoose";
 const PermissionSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User", //  Reference to the User model
+    ref: "User", 
     required: true,
   },
   moduleId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Module",
+    ref: "Module", 
     required: true,
   },
   permissions: {
-    read: { type: Boolean, default: false },
-    write: { type: Boolean, default: false },
-    delete: { type: Boolean, default: false },
+    create: { type: Boolean, default: false }, 
+    read: { type: Boolean, default: false },   // Allow viewing data
+    update: { type: Boolean, default: false }, // Allow modifying data
+    delete: { type: Boolean, default: false }, // Allow removing data
   },
   submodules: {
-    type: Object, //  Stores submodule permissions dynamically
+    type: Object, // Stores submodule permissions dynamically
     default: {},
   },
 });
-
 
 const Permission = mongoose.model("Permission", PermissionSchema);
 export default Permission;
