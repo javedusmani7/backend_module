@@ -22,7 +22,6 @@ app.use(cookieParser());
 // app.use(responseEncrypt);;
 
 app.use("/api/users", userRoutes);
-app.use("/api/modules", moduleRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
