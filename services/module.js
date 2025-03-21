@@ -52,8 +52,46 @@ export const createRoleService = async (req) => {
 };
 
 export const getRolesService = async () => {
-  const roles = await Role.find({}).populate("permission.moduleId").populate("permission.permissions");
+const roles = await Role.find({})
+    .populate("permissions.moduleId")
+    .populate("permissions.permission");
+
   return new ApiResponse(statusCode.OK, roles, "Roles fetched successfully");
+};
+
+export const updateRoleService = async (req) => {
+  const {_id, roleId, roleName, permissions } = req;
+
+  const existingRole = await Role.findById(_id);
+  if (!existingRole) {
+    throw new ApiResponse(statusCode.NOT_FOUND, null, "Role not found");
+  }
+  const formattedPermissions = await Promise.all(
+    permissions.map(async (element) => {
+      let permissionData;
+      if (element.permission._id) {
+        permissionData = await Permission.findByIdAndUpdate(
+          element.permission._id,
+          element.permission,
+          { new: true }
+        );
+      } else {
+        permissionData = await new Permission(element.permission).save();
+      }
+
+      return {
+        moduleId: element.moduleId,
+        permission: permissionData._id,
+      };
+    })
+  );
+  existingRole.roleId = roleId;
+  existingRole.roleName = roleName;
+  existingRole.permissions = formattedPermissions;
+
+  const updatedRole = await existingRole.save();
+
+  return new ApiResponse(statusCode.OK, updatedRole, "Role updated successfully");
 };
 
 export const deleteRoleService = async (roleId) => {

@@ -35,18 +35,6 @@ export const login = asyncHandler(async (req, res) => {
   res.status(result.statusCode).json(result);
 });
 
-//fetch roles
-
-export const getRoles = asyncHandler(async (req, res) => {
-  const result = await getRolesService();
-
-  if (!result || result.length === 0) {
-    throw new apiError(statusCode.NOT_FOUND, "No roles found");
-  }
-
-  res.status(statusCode.OK).json(result);
-});
-
 //get Users
 export const getUsers = asyncHandler(async (req, res) => {
   const result = await getUsersService();

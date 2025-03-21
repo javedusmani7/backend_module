@@ -50,3 +50,23 @@ export const createRoleSchema = Joi.object({
     .min(1)
     .required(),
 });
+
+export const updateRoleSchema = Joi.object({
+  _id: Joi.string(), // MongoDB ObjectId validation
+  roleId: Joi.number().required(), // Role ID must be a number
+  roleName: Joi.string().required(), // Role name must be a string
+  permissions: Joi.array()
+    .items(
+      Joi.object({
+        moduleId: Joi.string().required(), // MongoDB ObjectId validation
+        permission: Joi.object({
+          _id: Joi.string().optional(), // MongoDB ObjectId validation
+          read: Joi.boolean().required(), // Read permission must be a boolean
+          write: Joi.boolean().required(), // Write permission must be a boolean
+          delete: Joi.boolean().required(), // Delete permission must be a boolean
+          update: Joi.boolean().required(), // Update permission must be a boolean
+        }).required(),
+      })
+    )
+    .required(), 
+});
