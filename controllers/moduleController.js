@@ -1,36 +1,48 @@
-import {  updatePermissionsSchema } from "../validation/moduleValidation.js";
-import { getModulesWithPermissionsService, updatePermissionsService } from "../services/module.js";
+import { createModuleSchema, createRoleSchema, deleteModuleSchema, updateModuleSchema } from "../validation/moduleValidation.js";
+import { createModuleService, createRoleService, deleteModuleService, getModulesService, updateModuleService } from "../services/module.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { statusCode } from "../config/config.js";
-import User from "../models/User.js";
 
-/**
- * Controller to fetch modules with permissions
- */
-export const getModulesWithPermissions = asyncHandler(async (req, res) => {
-  const userId = req.user._id; // Get user ID from authentication middleware
 
-  if (!userId) {
-    throw new apiError(statusCode.USER_ERROR, "User ID is required");
-  }
- 
-
-  const result = await getModulesWithPermissionsService(userId);
-  res.status(result.statusCode).json(result);
-});
-
-/**
- * Controller to update permissions
- */
-export const updatePermissions = asyncHandler(async (req, res) => {
-  const { error } = updatePermissionsSchema.validate(req.body);
+export const createModule = asyncHandler(async (req, res) => {
+  const { error } = createModuleSchema.validate(req.body);
   if (error) {
     throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
   }
-  const result = await updatePermissionsService(req);
+  const result = await createModuleService(req.body);
   res.status(result.statusCode).json(result);
-
 });
 
+export const deleteModule = asyncHandler(async (req, res) => {
+  const { error } = deleteModuleSchema.validate(req.body);
+  if (error) {
+    throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
+  }
+  const result = await deleteModuleService(req.body);
+  res.status(result.statusCode).json(result);
+});
 
+export const updateModule = asyncHandler(async (req, res) => {
+  const { error } = updateModuleSchema.validate(req.body);
+  if (error) {
+    throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
+  }
+  const result = await updateModuleService(req.body);
+  res.status(result.statusCode).json(result);
+});
+
+export const getModules = asyncHandler(async (req, res) => {
+  const result = await getModulesService();
+  res.status(result.statusCode).json(result);
+});
+
+export const createRole = asyncHandler(async (req, res) => {
+  const { error } = createRoleSchema.validate(req.body);
+  if (error) {
+    throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
+  }
+  
+  const result = await createRoleService(req.body);
+  res.status(result.statusCode).json(result);
+});
