@@ -2,7 +2,7 @@ import express from "express";
 import { getModulesWithPermissions , updatePermissions   } from "../controllers/moduleController.js";
 import { apiLimiter } from "../middlewares/rateLimiter.js";
 import { verifyJWT } from "../middlewares/auth.js";
-import { adminPermission, checkPermission } from "../middlewares/checkPermission.js";
+import { checkPermission } from "../middlewares/checkPermission.js";
 
 const router = express.Router();
 router.use(apiLimiter);

@@ -9,9 +9,9 @@ export const checkPermission = asyncHandler(async (req, res, next) => {
     const user = req.user;
     const roleId = user.role;
     const { moduleId, action, subModule } = req.body;
-    const role = await Role.findById(roleId);    
-    if (role.roleId == 1) {
-        return next();        
+    const role = await Role.findById(roleId);
+    if (role.roleId === 1) {
+        return next();
     }
     const permissions = await Permission.findOne({ userId: user._id });
     const moduleData = await Module.findById(moduleId);
@@ -22,24 +22,11 @@ export const checkPermission = asyncHandler(async (req, res, next) => {
     if (permissions[action]) {
         if (subModule) {
             if (permissions[subModule].action) {
-               return next();
+                return next();
             }
             throw new apiError(statusCode.UNAUTHORIZED, "User does not have permission to perform this action");
         }
-        return next();
-    }
-    throw new apiError(statusCode.UNAUTHORIZED, "User does not have permission to perform this action");
-});
-
-export const adminPermission = asyncHandler(async (req, res, next) => {
-    const user = req.user;
-    const roleId = user.role;
-    const { userId } = req.body;
-    const adminRole = await Role.findById(roleId);
-    const userRole = await Role.findOne({ userId });
-
-    if (adminRole.roleId <= userRole.roleId) {
-        return next();
+       return next();
     }
     throw new apiError(statusCode.UNAUTHORIZED, "User does not have permission to perform this action");
 });
