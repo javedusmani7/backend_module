@@ -23,8 +23,10 @@ export const loginService = async (req) => {
     if (!user) return new ApiResponse(statusCode.NOT_FOUND, null, "User not found");
     const isMatch = await comparePassword(password, user.password);
     if (!isMatch) return new ApiResponse(statusCode.UNAUTHORIZED, null, "Invalid credentials");
-    const token = jwt.sign(user.toObject(), process.env.TOKEN_SECRET, { expiresIn: "1h" });
-    return new ApiResponse(statusCode.OK, { token, user }, "User logged in successfully");
+    const userObj = user.toObject();
+    delete userObj.password;
+    const token = jwt.sign(userObj, process.env.TOKEN_SECRET, { expiresIn: "1h" });
+    return new ApiResponse(statusCode.OK, { token,  user: userObj }, "User logged in successfully");
 }
 
 
@@ -38,7 +40,7 @@ export const getRolesService = async () => {
 
 export const getUsersService = async () => {
   try {
-    const users = await User.find().populate("role", "_id").select("-password"); // Fetch users with their role IDs
+    const users = await User.find().populate("role", "roleId roleName _id").select("-password"); // Fetch users with their role IDs
     console.log(users);
     return { statusCode: statusCode.OK, data: users };
   } catch (error) {
