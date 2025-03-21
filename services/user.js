@@ -38,8 +38,7 @@ export const getRolesService = async () => {
 
 export const getUsersService = async () => {
   try {
-    const users = await User.find().populate("role", "_id").select("-password"); // Fetch users with their role IDs
-    console.log(users);
+    const users = await User.find().populate("role", "roleId roleName -_id").select("-password"); // Fetch users with their role IDs
     return { statusCode: statusCode.OK, data: users };
   } catch (error) {
     console.log(error);
