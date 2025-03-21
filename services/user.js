@@ -19,7 +19,7 @@ export const registerService = async (req) => {
 
 export const loginService = async (req) => {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).populate("role", "roleId roleName");
     if (!user) return new ApiResponse(statusCode.NOT_FOUND, null, "User not found");
     const isMatch = await comparePassword(password, user.password);
     if (!isMatch) return new ApiResponse(statusCode.UNAUTHORIZED, null, "Invalid credentials");
