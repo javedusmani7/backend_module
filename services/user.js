@@ -35,3 +35,14 @@ export const getRolesService = async () => {
 
   return roles;
 };
+
+export const getUsersService = async () => {
+  try {
+    const users = await User.find().populate("role", "_id").select("-password"); // Fetch users with their role IDs
+    console.log(users);
+    return { statusCode: statusCode.OK, data: users };
+  } catch (error) {
+    console.log(error);
+    throw new apiError(statusCode.INTERNAL_ERROR, "Error fetching users", error);
+  }
+};
