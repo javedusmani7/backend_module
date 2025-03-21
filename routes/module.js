@@ -12,7 +12,8 @@ router.put("/module",updateModule);
 router.delete("/module",deleteModule);
 router.get("/module",getModules);
 router.post("/role",createRole);
-router.delete("/role/:roleId", deleteRole);
+router.delete("/role", deleteRole);
+
 
 export default router;
 

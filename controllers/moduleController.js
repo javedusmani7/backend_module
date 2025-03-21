@@ -48,7 +48,9 @@ export const createRole = asyncHandler(async (req, res) => {
 });
 
 export const deleteRole = asyncHandler(async (req, res) => {
-  const { roleId } = req.params;
+  const { roleId } = req.body;
+  
+
   
   const result = await deleteRoleService(roleId);
   res.status(result.statusCode).json(result);
