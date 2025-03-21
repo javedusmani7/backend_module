@@ -56,3 +56,28 @@ export const getRolesService = async () => {
   return new ApiResponse(statusCode.OK, roles, "Roles fetched successfully");
 };
 
+export const deleteRoleService = async (roleId) => {
+  const role = await Role.findOne({ roleId });
+  if (!role) {
+    throw new ApiResponse(statusCode.NOT_FOUND, null, "Role not found");
+  }
+
+  const deletedPermissions = await Promise.all(
+    role.permissions.map(async (perm) => {
+      const deletedPermission = await Permission.findByIdAndDelete(perm.permission);
+      return deletedPermission ? { permissionId: deletedPermission._id } : null;
+    })
+  );
+ 
+  await Role.findOneAndDelete({ roleId });
+  
+  return new ApiResponse(
+    statusCode.OK, 
+    { 
+      roleId: role.roleId, 
+      roleName: role.roleName, 
+      deletedPermissions: deletedPermissions.filter(Boolean) // Remove null values
+    }, 
+    `Role '${role.roleName}' (ID: ${role.roleId}) and associated permissions deleted successfully`
+  );
+};

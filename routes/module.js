@@ -1,5 +1,5 @@
 import express from "express";
-import { createModule, createRole, deleteModule, getModules, updateModule   } from "../controllers/moduleController.js";
+import { createModule, createRole, deleteModule, deleteRole, getModules, updateModule   } from "../controllers/moduleController.js";
 import { apiLimiter } from "../middlewares/rateLimiter.js";
 import { verifyJWT } from "../middlewares/auth.js";
 
@@ -12,5 +12,7 @@ router.put("/module",updateModule);
 router.delete("/module",deleteModule);
 router.get("/module",getModules);
 router.post("/role",createRole);
+router.delete("/role/:roleId", deleteRole);
+
 export default router;
 
