@@ -2,7 +2,7 @@ import { apiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { statusCode } from "../config/config.js";
 import { userRegistrationSchema, userLoginSchema } from "../validation/userValidation.js";
-import { registerService, loginService, getRolesService, getUsersService } from "../services/user.js";
+import { registerService, loginService, getUsersService } from "../services/user.js";
 
 export const register = asyncHandler(async (req, res) => {
 
@@ -35,7 +35,6 @@ export const login = asyncHandler(async (req, res) => {
   res.status(result.statusCode).json(result);
 });
 
-//get Users
 export const getUsers = asyncHandler(async (req, res) => {
   const result = await getUsersService();
 

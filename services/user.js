@@ -5,15 +5,16 @@ import { apiError } from "../utils/apiError.js";
 import { encryptPassword, comparePassword } from "../middlewares/encryption.js";
 import User from "../models/User.js";
 import Role from "../models/Role.js";
-import mongoose from "mongoose";
 
 export const registerService = async (req) => {
     const { name, email, password, role } = req.body;
+    if (!role) {
+      role = await Role.findOne({ roleName: "user" }).select(_id);
+    }
     const existingUser = await User.findOne({ email });    
     if (existingUser) return new ApiResponse(statusCode.ALREADY_EXISTS, existingUser, "User already exists");
     const hashedPassword = await encryptPassword(password);
-    const objectId = new mongoose.Types.ObjectId(role);
-    const newUser = await new User({ name, email, password: hashedPassword, role: objectId }).save();    
+    const newUser = await new User({ name, email, password: hashedPassword, role }).save();    
     return new ApiResponse(statusCode.CREATED, newUser, "User registered successfully");
 };
 
@@ -28,15 +29,6 @@ export const loginService = async (req) => {
     const token = jwt.sign(userObj, process.env.TOKEN_SECRET, { expiresIn: "1h" });
     return new ApiResponse(statusCode.OK, { token,  user: userObj }, "User logged in successfully");
 }
-
-
-
-export const getRolesService = async () => {
-  // Fetch all roles from Role model
-  const roles = await Role.find({}, { _id: 1, roleId: 1, roleName: 1 });
-
-  return roles;
-};
 
 export const getUsersService = async () => {
   try {

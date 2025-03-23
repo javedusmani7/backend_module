@@ -13,7 +13,8 @@ router.delete("/module",deleteModule);
 router.get("/module",getModules);
 router.post("/role",createRole);
 router.delete("/role", deleteRole);
-router.get("/role",getRoles);
+router.get("/role", verifyJWT, getRoles);
 router.put("/role",updateRole);
+
 export default router;
 

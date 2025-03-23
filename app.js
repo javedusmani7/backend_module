@@ -5,7 +5,6 @@ import cookieParser from 'cookie-parser';
 import { corsOptions } from './config/config.js';
 import { connectDB } from './config/db.js';
 import userRoutes from "./routes/user.js";
-import moduleRoutes from "./routes/module.js";
 import { errorHandler } from './utils/asyncHandler.js';
 import responseEncrypt from './middlewares/responseEncrypt.js';
 

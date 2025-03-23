@@ -1,5 +1,6 @@
 export const corsOptions = {
-    origin: 'http://localhost:54524',
+    origin: 'http://localhost:4200',
+    credentials: true,
 };
 
 export const statusCode = {
