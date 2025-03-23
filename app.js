@@ -17,7 +17,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors(corsOptions));
 app.use(cookieParser());
-// app.use(responseEncrypt);;
+app.use(responseEncrypt);
 
 app.use("/api/users", userRoutes);
 app.use(errorHandler);

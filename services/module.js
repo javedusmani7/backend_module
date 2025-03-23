@@ -119,3 +119,32 @@ export const deleteRoleService = async (roleId) => {
     `Role '${role.roleName}' (ID: ${role.roleId}) and associated permissions deleted successfully`
   );
 };
+
+export const updatePermissionService = async (req) => {
+  const { _id, permission} = req;  
+  const existingRole = await Role.findById(_id);
+  if (!existingRole) {
+    throw new ApiResponse(statusCode.NOT_FOUND, null, "Role not found");
+  }  
+  const formattedPermissions = await Promise.all(
+    permission.map(async (element) => {      
+      let permissionData;
+      if (element.permission._id) {        
+        permissionData = await Permission.findByIdAndUpdate(
+          element.permission._id,
+          element.permission,
+          { new: true }
+        );
+      } else {
+        permissionData = await new Permission(element.permission).save();
+      }
+      return {
+        moduleId: element.moduleId,
+        permission: permissionData._id,
+      };
+    })
+  );
+  existingRole.permissions = formattedPermissions;
+  const updatedRole = await existingRole.save();
+  return new ApiResponse(statusCode.OK, updatedRole, "Role permission updated successfully");
+};

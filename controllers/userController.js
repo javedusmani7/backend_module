@@ -7,10 +7,10 @@ import { registerService, loginService, getUsersService } from "../services/user
 export const register = asyncHandler(async (req, res) => {
 
   const { error } = userRegistrationSchema.validate(req.body);
-
   if (error) {
     throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
   }
+  
   const result = await registerService(req);
   res.status(result.statusCode).json(result);
 });
