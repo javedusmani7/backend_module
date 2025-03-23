@@ -26,9 +26,9 @@ export const login = asyncHandler(async (req, res) => {
     console.log("Setting cookie" , result.data.token);
     res.cookie('authToken', result.data.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: process.env.NODE_ENV === 'production' ? true : false,  // Disable secure flag in development
       maxAge: 24 * 60 * 60 * 1000,
-      sameSite: 'none',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // Use 'none' only in production
     });
     delete result.data.token;
   }

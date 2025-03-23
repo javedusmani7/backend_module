@@ -95,7 +95,7 @@ export const updateRoleService = async (req) => {
 };
 
 export const deleteRoleService = async (roleId) => {
-  const role = await Role.findOne({ roleId });
+  const role = await Role.findById( roleId );
   if (!role) {
     throw new ApiResponse(statusCode.NOT_FOUND, null, "Role not found");
   }
@@ -107,7 +107,7 @@ export const deleteRoleService = async (roleId) => {
     })
   );
  
-  await Role.findOneAndDelete({ roleId });
+  await Role.findByIdAndDelete(roleId );
   
   return new ApiResponse(
     statusCode.OK, 
