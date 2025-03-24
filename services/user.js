@@ -8,7 +8,10 @@ import Role from "../models/Role.js";
 
 export const registerService = async (req) => {
   const { name, email, password } = req.body;
-  let role = await Role.findOne().sort({ roleId: 1 });
+  let role = await Role.findOne({roleName: "USER"});
+  if (!role) {
+    return new ApiResponse(statusCode.NOT_FOUND, null, "USER role does not exists");
+  }
   const existingUser = await User.findOne({ email });
   if (existingUser) return new ApiResponse(statusCode.ALREADY_EXISTS, existingUser, "User already exists");
   const hashedPassword = await encryptPassword(password);
@@ -42,4 +45,14 @@ export const deleteUserService = async (req) => {
   const { _id } = req;
   const user = await User.findByIdAndDelete(_id); 
   return new ApiResponse(statusCode.OK, user, "User has been deleted successfully");
+}
+
+export const adminUpdateUserService = async (req) => {
+  const { _id } = req;
+  const updatedUser = await User.findByIdAndUpdate(
+    _id,
+    { $set: req },
+    { new: true } 
+  ).select("-password");
+  return new ApiResponse(statusCode.OK, updatedUser, "User updated successfully");
 }
