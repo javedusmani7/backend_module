@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { STATUS } from "../config/statusConfig.js";
 
 const RoleSchema = new mongoose.Schema({
   roleId: { 
@@ -21,6 +22,11 @@ const RoleSchema = new mongoose.Schema({
       ref: "Permission",
     },
   }],
+  status: { 
+      type: String, 
+      enum: Object.values(STATUS), 
+      default: STATUS.ACTIVE 
+    }
 }, { timestamps: true });
 
 const Role = mongoose.model("Role", RoleSchema);
