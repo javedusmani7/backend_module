@@ -2,11 +2,13 @@ import express from "express";
 import { register, login, getUsers } from "../controllers/userController.js";
 import { apiLimiter } from "../middlewares/rateLimiter.js";
 import moduleRoutes from "./module.js";
+import { verifyJWT } from "../middlewares/auth.js";
 
 const router = express.Router();
 router.use(apiLimiter);
 
-router.get("/", getUsers);
+router.get("/", verifyJWT, getUsers);
+router.delete("/", verifyJWT );
 router.post("/register", register);
 router.post("/login", login);
 router.use(moduleRoutes);

@@ -1,6 +1,6 @@
 
 import { createModuleSchema, createRoleSchema, deleteModuleSchema, updateModuleSchema, updateRoleSchema } from "../validation/moduleValidation.js";
-import { createModuleService, createRoleService, deleteModuleService, deleteRoleService, getModulesService, getRolesService, updateModuleService, updateRoleService } from "../services/module.js";
+import { createModuleService, createRoleService, deleteModuleService, deleteRoleService, getModulesService, getRolesService, updateModuleService, updatePermissionService, updateRoleService } from "../services/module.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { statusCode } from "../config/config.js";
@@ -48,9 +48,8 @@ export const createRole = asyncHandler(async (req, res) => {
 });
 
 export const deleteRole = asyncHandler(async (req, res) => {
-  const { _id } = req.body; // Extract _id from the request body
-
-  const result = await deleteRoleService(_id);
+  const { roleId } = req.body;
+  const result = await deleteRoleService(roleId);
   res.status(result.statusCode).json(result);
 });
 
@@ -66,5 +65,10 @@ export const updateRole = asyncHandler(async (req, res) => {
     throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
   }
   const result = await updateRoleService(req.body);
+  res.status(result.statusCode).json(result);
+});
+
+export const updatePermission = asyncHandler(async (req, res) => {
+  const result = await updatePermissionService(req.body);
   res.status(result.statusCode).json(result);
 })

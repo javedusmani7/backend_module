@@ -5,7 +5,6 @@ import cookieParser from 'cookie-parser';
 import { corsOptions } from './config/config.js';
 import { connectDB } from './config/db.js';
 import userRoutes from "./routes/user.js";
-import moduleRoutes from "./routes/module.js";
 import { errorHandler } from './utils/asyncHandler.js';
 import responseEncrypt from './middlewares/responseEncrypt.js';
 
@@ -18,7 +17,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors(corsOptions));
 app.use(cookieParser());
-// app.use(responseEncrypt);;
+app.use(responseEncrypt);
 
 app.use("/api/users", userRoutes);
 app.use(errorHandler);

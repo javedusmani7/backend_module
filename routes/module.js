@@ -1,19 +1,21 @@
 import express from "express";
-import { createModule, createRole, deleteModule, deleteRole, getModules, getRoles, updateModule, updateRole   } from "../controllers/moduleController.js";
+import { createModule, createRole, deleteModule, deleteRole, getModules, getRoles, updateModule, updatePermission, updateRole } from "../controllers/moduleController.js";
 import { apiLimiter } from "../middlewares/rateLimiter.js";
-import { verifyJWT } from "../middlewares/auth.js";
+import { verifyAdmin, verifyJWT } from "../middlewares/auth.js";
 
 const router = express.Router();
 router.use(apiLimiter);
 
 
-router.post("/module",createModule);
-router.put("/module",updateModule);
-router.delete("/module",deleteModule);
-router.get("/module",getModules);
-router.post("/role",createRole);
-router.delete("/role", deleteRole);
-router.get("/role",getRoles);
-router.put("/role",updateRole);
+router.post("/module", verifyJWT, createModule);
+router.put("/module", verifyJWT, updateModule);
+router.delete("/module", verifyJWT, deleteModule);
+router.get("/module", verifyJWT, getModules);
+router.post("/role", verifyJWT, createRole);
+router.delete("/role", verifyJWT, verifyAdmin, deleteRole);
+router.get("/role", verifyJWT, getRoles);
+router.put("/role", verifyJWT, verifyAdmin, updateRole);
+router.put("/role/permission", verifyJWT,verifyAdmin, updatePermission);
+
 export default router;
 

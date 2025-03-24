@@ -2,10 +2,11 @@ import { apiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js"; // Ensure correct import
+import Role from "../models/Role.js";
+import { statusCode } from "../config/config.js";
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
-
-  const token= req.cookies?.authToken || req.header("Authorization")?.replace("Bearer ", "");
+  const token= req.cookies?.authToken ;  
   if (!token) {
     return next(new apiError(401, "Unauthorized request"));
   }
@@ -19,3 +20,10 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
   req.user = user; // Attach user to request
   next();
 });
+
+export const verifyAdmin = asyncHandler(async (req, res, next) => {
+  const { role } = req.user;
+  const adminRole = await Role.findOne().sort({ roleId: -1 });
+  if (role != adminRole) return next(new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation"));  
+  return next();
+})
