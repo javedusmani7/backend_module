@@ -120,7 +120,7 @@ export const deleteRoleService = async (roleId) => {
   );
 };
 
-export const updatePermissionService = async (req) => {
+export const nupdatePermissionService = async (req) => {
   const { _id, permission} = req;  
   const existingRole = await Role.findById(_id);
   if (!existingRole) {
