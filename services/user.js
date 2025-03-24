@@ -37,3 +37,9 @@ export const getUsersService = async () => {
     throw new apiError(statusCode.INTERNAL_ERROR, "Error fetching users", error);
   }
 };
+
+export const deleteUserService = async (req) => {
+  const { _id } = req;
+  const user = await User.findByIdAndDelete(_id); 
+  return new ApiResponse(statusCode.OK, user, "User has been deleted successfully");
+}

@@ -37,10 +37,12 @@ export const login = asyncHandler(async (req, res) => {
 
 export const getUsers = asyncHandler(async (req, res) => {
   const result = await getUsersService();
-
   if (!result || result.length === 0) {
     throw new apiError(statusCode.NOT_FOUND, "No users found");
   }
-
   res.status(statusCode.OK).json(result);
 });
+
+export const deleteUser = asyncHandler(async (req, res) => {
+  
+})
