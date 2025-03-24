@@ -26,7 +26,7 @@ export const verifyAdmin = asyncHandler(async (req, res, next) => {
   const adminRole = await Role.findOne().sort({ roleId: -1 });
 
   if (!role.equals(adminRole._id)) {
-    throw new Error(new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation"));
+    return next(new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation"));
   }
   return next();
 })
