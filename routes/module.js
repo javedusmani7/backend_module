@@ -7,12 +7,12 @@ const router = express.Router();
 router.use(apiLimiter);
 
 
-router.post("/module", verifyJWT, createModule);
+router.post("/module",  createModule);
 router.put("/module", verifyJWT, updateModule);
 router.delete("/module", verifyJWT, deleteModule);
 router.get("/module", verifyJWT, getModules);
 router.post("/role", createRole);
-router.delete("/role", verifyJWT, verifyAdmin, deleteRole);
+router.post("/deleteRole", verifyJWT, deleteRole);
 router.get("/role", verifyJWT, getRoles);
 router.put("/role", verifyJWT, verifyAdmin, updateRole);
 router.put("/role/permission", verifyJWT, verifyAdmin, updatePermission);

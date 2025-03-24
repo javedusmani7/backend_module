@@ -22,11 +22,10 @@ const RoleSchema = new mongoose.Schema({
       ref: "Permission",
     },
   }],
-  status: { 
-      type: String, 
-      enum: Object.values(STATUS), 
-      default: STATUS.ACTIVE 
-    }
+  defaulRole:{
+    type: Boolean,
+    default: false
+  }
 }, { timestamps: true });
 
 const Role = mongoose.model("Role", RoleSchema);
