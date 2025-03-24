@@ -13,3 +13,4 @@ export const statusCode = {
     "UNAUTHORIZED": 401,
     "LACK_PERMISSION": 406
 }
+
