@@ -21,6 +21,10 @@ const RoleSchema = new mongoose.Schema({
       ref: "Permission",
     },
   }],
+  defaulRole:{
+    type: Boolean,
+    default: false
+  }
 }, { timestamps: true });
 
 const Role = mongoose.model("Role", RoleSchema);

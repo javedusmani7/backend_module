@@ -23,9 +23,10 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
 
 export const verifyAdmin = asyncHandler(async (req, res, next) => {
   const { role } = req.user;
-  const adminRole = await Role.findOne().sort({ roleId: -1 });
 
-  if (!role.equals(adminRole._id)) {
+  const adminRole = await Role.findById(role)
+
+  if (adminRole.roleName !== "OWNER") {
     return next(new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation"));
   }
   return next();

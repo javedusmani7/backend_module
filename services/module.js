@@ -30,7 +30,13 @@ export const getModulesService = async () => {
 
 export const createRoleService = async (req) => {
   const { roleId, roleName, permissions } = req;
- 
+  const searchRoleName = roleName.toUpperCase().trim();
+  const existingRole = await Role.find({roleName: searchRoleName});
+
+  if (existingRole.length) {
+    return new ApiResponse(statusCode.ALREADY_EXISTS, existingRole, "Role already existing");
+  }
+
   const formattedPermissions = await Promise.all(
     permissions.map(async (element) => {
       const permissionData = await new Permission(element.permission).save();
@@ -43,7 +49,7 @@ export const createRoleService = async (req) => {
 
   const newRole = new Role({
     roleId,
-    roleName,
+    roleName:searchRoleName,
     permissions: formattedPermissions,
   });
 
@@ -55,7 +61,6 @@ export const getRolesService = async () => {
 const roles = await Role.find({})
     .populate("permissions.moduleId")
     .populate("permissions.permission");
-
   return new ApiResponse(statusCode.OK, roles, "Roles fetched successfully");
 };
 
@@ -97,9 +102,11 @@ export const updateRoleService = async (req) => {
 export const deleteRoleService = async (roleId) => {
   const role = await Role.findById( roleId );
   if (!role) {
-    throw new ApiResponse(statusCode.NOT_FOUND, null, "Role not found");
+    return new ApiResponse(statusCode.NOT_FOUND, null, "Role not found");
   }
-
+  if (role.defaulRole) {
+    return new ApiResponse(statusCode.LACK_PERMISSION, null, "you can not delete the default roles");
+  }
   const deletedPermissions = await Promise.all(
     role.permissions.map(async (perm) => {
       const deletedPermission = await Permission.findByIdAndDelete(perm.permission);
@@ -148,3 +155,11 @@ export const updatePermissionService = async (req) => {
   const updatedRole = await existingRole.save();
   return new ApiResponse(statusCode.OK, updatedRole, "Role permission updated successfully");
 };
+
+export const getRoleByIdService = async (req) => {
+  const roles = await Role.findById(req)
+    .populate("permissions.moduleId")
+    .populate("permissions.permission"); 
+    return new ApiResponse(statusCode.OK, roles, "Role fetched successfully");
+
+}
