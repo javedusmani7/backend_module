@@ -39,10 +39,12 @@ export const getModules = asyncHandler(async (req, res) => {
 });
 
 export const createRole = asyncHandler(async (req, res) => {
+  console.log("ROLE DATA",req.body);
   const { error } = createRoleSchema.validate(req.body);
   if (error) {
     throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
   }
+  
   const result = await createRoleService(req.body);
   res.status(result.statusCode).json(result);
 });

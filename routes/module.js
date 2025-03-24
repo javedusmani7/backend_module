@@ -11,11 +11,11 @@ router.post("/module", verifyJWT, createModule);
 router.put("/module", verifyJWT, updateModule);
 router.delete("/module", verifyJWT, deleteModule);
 router.get("/module", verifyJWT, getModules);
-router.post("/role", verifyJWT, createRole);
+router.post("/role", createRole);
 router.delete("/role", verifyJWT, verifyAdmin, deleteRole);
 router.get("/role", verifyJWT, getRoles);
 router.put("/role", verifyJWT, verifyAdmin, updateRole);
-router.put("/role/permission", verifyJWT,verifyAdmin, updatePermission);
+router.put("/role/permission", verifyJWT, verifyAdmin, updatePermission);
 
 export default router;
 
