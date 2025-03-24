@@ -15,7 +15,7 @@ router.post("/role", verifyJWT, createRole);
 router.delete("/role", verifyJWT, verifyAdmin, deleteRole);
 router.get("/role", verifyJWT, getRoles);
 router.put("/role", verifyJWT, verifyAdmin, updateRole);
-router.put("/role/permission", verifyJWT,verifyAdmin, updatePermission);
+router.put("/role/permission", verifyJWT, verifyAdmin, updatePermission);
 
 export default router;
 

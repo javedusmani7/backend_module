@@ -1,8 +1,8 @@
 import { apiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { statusCode } from "../config/config.js";
-import { userRegistrationSchema, userLoginSchema } from "../validation/userValidation.js";
-import { registerService, loginService, getUsersService } from "../services/user.js";
+import { userRegistrationSchema, userLoginSchema, deleteUserSchema } from "../validation/userValidation.js";
+import { registerService, loginService, getUsersService, deleteUserService } from "../services/user.js";
 
 export const register = asyncHandler(async (req, res) => {
 
@@ -45,4 +45,12 @@ export const getUsers = asyncHandler(async (req, res) => {
 
 export const deleteUser = asyncHandler(async (req, res) => {
   
+  console.log(req.body);
+  const { error } = deleteUserSchema.validate(req.body);
+  if (error) {
+    throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
+  }
+  
+  const result = await deleteUserService(req.body);
+  res.status(statusCode.OK).json(result);
 })
