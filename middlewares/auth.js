@@ -23,14 +23,19 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
   next();
 });
 
-export const verifyPermission = asyncHandler(async (req, res, next) => {
-  const { option } = req.body;
-  const { operation } = option;
+export const verifyPermission = asyncHandler(async (req, res, next) => {  
+  const { operation,  module} = req.body;
   const { role } = req.user;
-  if (req.body.option) {
-    delete req.body.option;
+  if (req.body.operation) {
+    delete req.body.operation;
   }  
-  const module_id = await Module.findOne({"name": option.module}).select("_id");
+  if (req.body.module) {
+    delete req.body.module;
+  }  
+
+  console.log(module);
+  
+  const module_id = await Module.findOne({"name": module}).select("_id");
   
   if (!module_id?._id) {
     return next(new apiError(statusCode.NOT_FOUND, "Module not found"));

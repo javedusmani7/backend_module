@@ -18,7 +18,7 @@ const ModuleSchema = new mongoose.Schema({
   status: { 
       type: String, 
       enum: Object.values(STATUS), 
-      default: STATUS.PENDING 
+      default: STATUS.ACTIVE 
     }
 });
 

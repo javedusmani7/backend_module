@@ -22,7 +22,12 @@ const RoleSchema = new mongoose.Schema({
       ref: "Permission",
     },
   }],
-  defaulRole:{
+  status: { 
+    type: String, 
+    enum: Object.values(STATUS), 
+    default: STATUS.ACTIVE 
+  },
+  defaultRole:{
     type: Boolean,
     default: false
   }
