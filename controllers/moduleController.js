@@ -33,7 +33,7 @@ export const updateModule = asyncHandler(async (req, res) => {
   res.status(result.statusCode).json(result);
 });
 
-export const getModules = asyncHandler(async (req, res) => {
+export const getModules = asyncHandler(async (req, res) => {  
   const result = await getModulesService();
   res.status(result.statusCode).json(result);
 });

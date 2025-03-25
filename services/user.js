@@ -22,9 +22,9 @@ export const registerService = async (req) => {
 export const loginService = async (req) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email }).populate("role", "roleId roleName");
-  if (!user) return new ApiResponse(statusCode.NOT_FOUND, null, "User not found");
+  if (!user) return new ApiResponse(statusCode.NOT_FOUND, null, `User not found with this email ${email}`);
   const isMatch = await comparePassword(password, user.password);
-  if (!isMatch) return new ApiResponse(statusCode.UNAUTHORIZED, null, "Invalid credentials");
+  if (!isMatch) return new ApiResponse(statusCode.UNAUTHORIZED, null, "Password is not correct");
   const userObj = user.toObject();
   delete userObj.password;
   const token = jwt.sign(userObj, process.env.TOKEN_SECRET, { expiresIn: "1h" });
