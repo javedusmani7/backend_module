@@ -7,11 +7,11 @@ import { verifyAdmin, verifyJWT } from "../middlewares/auth.js";
 const router = express.Router();
 router.use(apiLimiter);
 
-router.get("/", verifyJWT, getUsers);
+router.post("/", verifyJWT, getUsers);
 router.post("/delete", verifyJWT, deleteUser);
 router.post("/register", register);
 router.post("/login", login);
-router.post('/update/updatebyadmin',verifyJWT, verifyAdmin, adminUpdateUser);
+router.post('/update/updatebyadmin',verifyJWT, adminUpdateUser);
 router.use(moduleRoutes);
 
 export default router;

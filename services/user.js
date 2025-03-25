@@ -33,7 +33,7 @@ export const loginService = async (req) => {
 
 export const getUsersService = async () => {
   try {
-    const users = await User.find().populate("role", "roleId roleName -_id").select("-password");
+    const users = await User.find().populate("role", "roleId roleName _id").select("-password");
     return { statusCode: statusCode.OK, data: users };
   } catch (error) {
     console.log(error);
@@ -53,6 +53,7 @@ export const adminUpdateUserService = async (req) => {
     _id,
     { $set: req },
     { new: true } 
-  ).select("-password");
+  ).select("-password")
+  .populate("role", "roleId roleName _id"); 
   return new ApiResponse(statusCode.OK, updatedUser, "User updated successfully");
 }

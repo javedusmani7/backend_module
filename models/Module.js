@@ -4,6 +4,7 @@ import { STATUS } from "../config/statusConfig.js";
 const ModuleSchema = new mongoose.Schema({
   name: {
     type: String,
+    enum: ["User Management", "Role Management"],
     required: true,
   },
   desciption: {
