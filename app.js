@@ -7,6 +7,7 @@ import { connectDB } from './config/db.js';
 import userRoutes from "./routes/user.js";
 import { errorHandler } from './utils/asyncHandler.js';
 import responseEncrypt from './middlewares/responseEncrypt.js';
+import { errorHandlerWinston } from './middlewares/errorHandler.js';
 
 dotenv.config();
 connectDB();
@@ -20,7 +21,8 @@ app.use(cookieParser());
 // app.use(responseEncrypt);
 
 app.use("/api/users", userRoutes);
-app.use(errorHandler);
+// app.use(errorHandlerWinston); 
+app.use(errorHandler); 
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

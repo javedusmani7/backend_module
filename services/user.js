@@ -54,6 +54,6 @@ export const adminUpdateUserService = async (req) => {
     { $set: req },
     { new: true } 
   ).select("-password")
-  .populate("role", "roleId roleName _id"); 
+  .populate("role", "roleId roleName _id");
   return new ApiResponse(statusCode.OK, updatedUser, "User updated successfully");
 }
