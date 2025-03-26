@@ -8,7 +8,10 @@ import Role from "../models/Role.js";
 
 export const registerService = async (req) => {
   const { name, email, password } = req.body;
-  let role = await Role.findOne().sort({ roleId: 1 });
+  let role = await Role.findOne({roleName: "USER"});
+  if (!role) {
+    return new ApiResponse(statusCode.NOT_FOUND, null, "USER role does not exists");
+  }
   const existingUser = await User.findOne({ email });
   if (existingUser) return new ApiResponse(statusCode.ALREADY_EXISTS, existingUser, "User already exists");
   const hashedPassword = await encryptPassword(password);
@@ -19,9 +22,9 @@ export const registerService = async (req) => {
 export const loginService = async (req) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email }).populate("role", "roleId roleName");
-  if (!user) return new ApiResponse(statusCode.NOT_FOUND, null, "User not found");
+  if (!user) return new ApiResponse(statusCode.NOT_FOUND, null, `User not found with this email ${email}`);
   const isMatch = await comparePassword(password, user.password);
-  if (!isMatch) return new ApiResponse(statusCode.UNAUTHORIZED, null, "Invalid credentials");
+  if (!isMatch) return new ApiResponse(statusCode.UNAUTHORIZED, null, "Password is not correct");
   const userObj = user.toObject();
   delete userObj.password;
   const token = jwt.sign(userObj, process.env.TOKEN_SECRET, { expiresIn: "1h" });
@@ -30,7 +33,7 @@ export const loginService = async (req) => {
 
 export const getUsersService = async () => {
   try {
-    const users = await User.find().populate("role", "roleId roleName -_id").select("-password");
+    const users = await User.find().populate("role", "roleId roleName _id").select("-password");
     return { statusCode: statusCode.OK, data: users };
   } catch (error) {
     console.log(error);
@@ -42,4 +45,15 @@ export const deleteUserService = async (req) => {
   const { _id } = req;
   const user = await User.findByIdAndDelete(_id); 
   return new ApiResponse(statusCode.OK, user, "User has been deleted successfully");
+}
+
+export const adminUpdateUserService = async (req) => {
+  const { _id } = req;
+  const updatedUser = await User.findByIdAndUpdate(
+    _id,
+    { $set: req },
+    { new: true } 
+  ).select("-password")
+  .populate("role", "roleId roleName _id");
+  return new ApiResponse(statusCode.OK, updatedUser, "User updated successfully");
 }

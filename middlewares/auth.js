@@ -4,6 +4,8 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.js"; // Ensure correct import
 import Role from "../models/Role.js";
 import { statusCode } from "../config/config.js";
+import Module from "../models/Module.js";
+import Permission from "../models/Permission.js";
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
   const token = req.cookies?.authToken;
@@ -17,16 +19,45 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
   if (!user) {
     return next(new apiError(401, "Invalid access token"));
   }
-  req.user = user; // Attach user to request
+  req.user = user;
+  next();
+});
+
+export const verifyPermission = asyncHandler(async (req, res, next) => {  
+  const { operation,  module} = req.body;
+  const { role } = req.user;
+  if (req.body.operation) {
+    delete req.body.operation;
+  }  
+  if (req.body.module) {
+    delete req.body.module;
+  }  
+
+  console.log(module);
+  
+  const module_id = await Module.findOne({"name": module}).select("_id");
+  
+  if (!module_id?._id) {
+    return next(new apiError(statusCode.NOT_FOUND, "Module not found"));
+  }
+  const roleData = await Role.findById(role).select("permissions -_id"); 
+  const index = roleData.permissions.findIndex(item => item.moduleId.equals(module_id._id)); 
+  if (index == -1) {
+    return next(new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation"));
+  } 
+  const permission = await Permission.findById(roleData.permissions[index].permission)
+  if (!permission[operation]) {
+    return next(new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation"));
+  }
   next();
 });
 
 export const verifyAdmin = asyncHandler(async (req, res, next) => {
   const { role } = req.user;
-  const adminRole = await Role.findOne().sort({ roleId: -1 });
+  const adminRole = await Role.findById(role)
 
-  if (!role.equals(adminRole._id)) {
-    throw new Error(new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation"));
+  if (adminRole.roleName !== "OWNER") {
+    return next(new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation"));
   }
   return next();
 })
