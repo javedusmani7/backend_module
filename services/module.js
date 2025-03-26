@@ -3,30 +3,41 @@ import { statusCode } from "../config/config.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import Permission from "../models/Permission.js";
 import Role from "../models/Role.js";
+import logger from "../logger.js";
+import fs from "fs";
+import path from "path";
 
 
+// Module Services
 export const createModuleService = async (req) => {
-  const moduleData = req;
-  const module = await new Module(moduleData).save();
+  logger.info(`Creating module with data: ${JSON.stringify(req)}`);
+  const module = await new Module(req).save();
+  logger.info(`Module created successfully: ${module._id}`);
   return new ApiResponse(statusCode.CREATED, module, "Module created successfully");
-}
+};
 
-export const deleteModuleService = async (req) => {
-  let { moduleId } = req;
+export const deleteModuleService = async ({ moduleId }) => {
+  logger.info(`Deleting module with ID: ${moduleId}`);
   const module = await Module.findByIdAndDelete(moduleId);
+  logger.info(`Module deleted: ${moduleId}`);
   return new ApiResponse(statusCode.OK, module, "Module deleted successfully");
 };
 
-export const updateModuleService = async (req) => {
-  const { moduleId, moduleData } = req;
+export const updateModuleService = async ({ moduleId, moduleData }) => {
+  logger.info(`Updating module ID: ${moduleId}`);
   const module = await Module.findByIdAndUpdate(moduleId, moduleData, { new: true });
+  logger.info(`Module updated: ${moduleId}`);
   return new ApiResponse(statusCode.OK, module, "Module updated successfully");
 };
 
 export const getModulesService = async () => {
+  logger.info("Fetching all modules");
   const modules = await Module.find({});
+  logger.info(`Fetched ${modules.length} modules`);
   return new ApiResponse(statusCode.OK, modules, "Modules fetched successfully");
 };
+
+// Role Services
 
 export const createRoleService = async (req) => {
   const { roleId, roleName, permissions, levelId } = req.body;
@@ -35,19 +46,18 @@ export const createRoleService = async (req) => {
   const parentLevel = [...userRoleData.parentLevel, userRoleData.levelId];
   const createdBy = req.user._id;  
   const searchRoleName = roleName.toUpperCase().trim();
-  const existingRole = await Role.find({roleName: searchRoleName});
+  logger.info(`Creating role: ${searchRoleName}`);
 
-  if (existingRole.length) {
-    return new ApiResponse(statusCode.ALREADY_EXISTS, existingRole, "Role already existing");
+  const existingRole = await Role.findOne({ roleName: searchRoleName });
+  if (existingRole) {
+    logger.warn(`Role already exists: ${searchRoleName}`);
+    return new ApiResponse(statusCode.ALREADY_EXISTS, existingRole, "Role already exists");
   }
 
   const formattedPermissions = await Promise.all(
-    permissions.map(async (element) => {
-      const permissionData = await new Permission(element.permission).save();
-      return {
-        moduleId: element.moduleId,
-        permission: permissionData._id,
-      };
+    permissions.map(async ({ moduleId, permission }) => {
+      const permissionData = await new Permission(permission).save();
+      return { moduleId, permission: permissionData._id };
     })
   );
 
@@ -61,116 +71,130 @@ export const createRoleService = async (req) => {
   });
 
   const savedRole = await newRole.save();
+  logger.info(`Role created successfully: ${searchRoleName}`);
+
   return new ApiResponse(statusCode.CREATED, savedRole, "Role created successfully");
-  return new ApiResponse(statusCode.CREATED, null, "Role created successfully");
 };
 
 export const getRolesService = async () => {
-const roles = await Role.find({})
-    .populate("permissions.moduleId")
-    .populate("permissions.permission")
-    .populate("levelId");
+  logger.info("Fetching all roles");
+  const roles = await Role.find({})
+  .populate("permissions.moduleId")
+  .populate("permissions.permission")
+  .populate("levelId");
+  logger.info(`Fetched ${roles.length} roles`);
   return new ApiResponse(statusCode.OK, roles, "Roles fetched successfully");
 };
+
 
 export const updateRoleService = async (req) => {
   const {_id, roleId, roleName, permissions, levelId } = req;
 
   const existingRole = await Role.findById(_id);
   if (!existingRole) {
+    logger.warn(`Role not found: ${_id}`);
     throw new ApiResponse(statusCode.NOT_FOUND, null, "Role not found");
   }
-  const formattedPermissions = await Promise.all(
-    permissions.map(async (element) => {
-      let permissionData;
-      if (element.permission._id) {
-        permissionData = await Permission.findByIdAndUpdate(
-          element.permission._id,
-          element.permission,
-          { new: true }
-        );
-      } else {
-        permissionData = await new Permission(element.permission).save();
-      }
 
-      return {
-        moduleId: element.moduleId,
-        permission: permissionData._id,
-      };
+  const formattedPermissions = await Promise.all(
+    permissions.map(async ({ moduleId, permission }) => {
+      let permissionData = permission._id
+        ? await Permission.findByIdAndUpdate(permission._id, permission, { new: true })
+        : await new Permission(permission).save();
+      return { moduleId, permission: permissionData._id };
     })
   );
+
   existingRole.roleId = roleId;
   existingRole.roleName = roleName;
   existingRole.permissions = formattedPermissions;
   existingRole.levelId = levelId;
 
   const updatedRole = await existingRole.save();
-
+  
+  logger.info(`Role updated successfully: ${_id}`);
   return new ApiResponse(statusCode.OK, updatedRole, "Role updated successfully");
 };
 
 export const deleteRoleService = async (roleId) => {
-  const role = await Role.findById( roleId );
+  logger.info(`Deleting role ID: ${roleId}`);
+  const role = await Role.findById(roleId);
   if (!role) {
+    logger.warn(`Role not found: ${roleId}`);
     return new ApiResponse(statusCode.NOT_FOUND, null, "Role not found");
   }
-  if (role.defaulRole) {
-    return new ApiResponse(statusCode.LACK_PERMISSION, null, "you can not delete the default roles");
+
+  if (role.defaultRole) {
+    logger.warn(`Attempt to delete a default role: ${roleId}`);
+    return new ApiResponse(statusCode.LACK_PERMISSION, null, "Cannot delete default roles");
   }
+
   const deletedPermissions = await Promise.all(
     role.permissions.map(async (perm) => {
-      const deletedPermission = await Permission.findByIdAndDelete(perm.permission);
-      return deletedPermission ? { permissionId: deletedPermission._id } : null;
+      return await Permission.findByIdAndDelete(perm.permission);
     })
   );
- 
-  await Role.findByIdAndDelete(roleId );
-  
+
+  await Role.findByIdAndDelete(roleId);
+  logger.info(`Role deleted: ${roleId}`);
+
   return new ApiResponse(
-    statusCode.OK, 
-    { 
-      roleId: role.roleId, 
-      roleName: role.roleName, 
-      deletedPermissions: deletedPermissions.filter(Boolean) // Remove null values
-    }, 
+    statusCode.OK,
+    { roleId: role.roleId, roleName: role.roleName, deletedPermissions },
     `Role '${role.roleName}' (ID: ${role.roleId}) and associated permissions deleted successfully`
   );
 };
 
-export const updatePermissionService = async (req) => {
-  const { _id, permission} = req;  
+export const updatePermissionService = async ({ _id, permission }) => {
+  logger.info(`Updating permissions for role ID: ${_id}`);
+
   const existingRole = await Role.findById(_id);
   if (!existingRole) {
+    logger.warn(`Role not found: ${_id}`);
     throw new ApiResponse(statusCode.NOT_FOUND, null, "Role not found");
-  }  
+  }
+
   const formattedPermissions = await Promise.all(
-    permission.map(async (element) => {      
-      let permissionData;
-      if (element.permission._id) {        
-        permissionData = await Permission.findByIdAndUpdate(
-          element.permission._id,
-          element.permission,
-          { new: true }
-        );
-      } else {
-        permissionData = await new Permission(element.permission).save();
-      }
-      return {
-        moduleId: element.moduleId,
-        permission: permissionData._id,
-      };
+    permission.map(async ({ moduleId, permission }) => {
+      let permissionData = permission._id
+        ? await Permission.findByIdAndUpdate(permission._id, permission, { new: true })
+        : await new Permission(permission).save();
+      return { moduleId, permission: permissionData._id };
     })
   );
+
   existingRole.permissions = formattedPermissions;
   const updatedRole = await existingRole.save();
+
+  logger.info(`Permissions updated for role ID: ${_id}`);
   return new ApiResponse(statusCode.OK, updatedRole, "Role permission updated successfully");
 };
 
-export const getRoleByIdService = async (req) => {
-  const roles = await Role.findById(req)
-    .populate("permissions.moduleId")
-    .populate("permissions.permission")
-    .populate("levelId"); 
-    return new ApiResponse(statusCode.OK, roles, "Role fetched successfully");
+export const getRoleByIdService = async (roleId) => {
+  logger.info(`Fetching role by ID: ${roleId}`);
+  const roles = await Role.findById(roleId)
+  .populate("permissions.moduleId")
+  .populate("permissions.permission")
+  .populate("levelId"); 
+  logger.info(`Role fetched: ${roleId}`);
+  return new ApiResponse(statusCode.OK, roles, "Role fetched successfully");
+};
 
-}
+
+// Blog Services
+const blogFilePath = path.join(process.cwd(), "data/blogs.json");
+export const getBlogServices = async () => {
+  logger.info("Fetching blog");
+  const blog = fs.readFileSync(blogFilePath, "utf8");
+  logger.info("Fetched blog");
+  return new ApiResponse(statusCode.OK, JSON.parse(blog), "Blog fetched successfully");
+};
+
+// News Services
+const newsFilePath = path.join(process.cwd(), "data/news.json");
+export const getNewsServices = async () => {
+  logger.info("Fetching news");
+  const news = fs.readFileSync(newsFilePath, "utf8");
+  logger.info("Fetched news");
+  return new ApiResponse(statusCode.OK, JSON.parse(news), "News fetched successfully");
+};
