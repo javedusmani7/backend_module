@@ -29,7 +29,11 @@ export const getModulesService = async () => {
 };
 
 export const createRoleService = async (req) => {
-  const { roleId, roleName, permissions } = req;
+  const { roleId, roleName, permissions, levelId } = req.body;
+  const roleID = req.user.role;
+  const userRoleData = await Role.findById(roleID);
+  const parentLevel = [...userRoleData.parentLevel, userRoleData.levelId];
+  const createdBy = req.user._id;  
   const searchRoleName = roleName.toUpperCase().trim();
   const existingRole = await Role.find({roleName: searchRoleName});
 
@@ -51,21 +55,26 @@ export const createRoleService = async (req) => {
     roleId,
     roleName:searchRoleName,
     permissions: formattedPermissions,
+    levelId,
+    parentLevel,
+    createdBy
   });
 
   const savedRole = await newRole.save();
   return new ApiResponse(statusCode.CREATED, savedRole, "Role created successfully");
+  return new ApiResponse(statusCode.CREATED, null, "Role created successfully");
 };
 
 export const getRolesService = async () => {
 const roles = await Role.find({})
     .populate("permissions.moduleId")
-    .populate("permissions.permission");
+    .populate("permissions.permission")
+    .populate("levelId");
   return new ApiResponse(statusCode.OK, roles, "Roles fetched successfully");
 };
 
 export const updateRoleService = async (req) => {
-  const {_id, roleId, roleName, permissions } = req;
+  const {_id, roleId, roleName, permissions, levelId } = req;
 
   const existingRole = await Role.findById(_id);
   if (!existingRole) {
@@ -93,6 +102,7 @@ export const updateRoleService = async (req) => {
   existingRole.roleId = roleId;
   existingRole.roleName = roleName;
   existingRole.permissions = formattedPermissions;
+  existingRole.levelId = levelId;
 
   const updatedRole = await existingRole.save();
 
@@ -159,7 +169,8 @@ export const updatePermissionService = async (req) => {
 export const getRoleByIdService = async (req) => {
   const roles = await Role.findById(req)
     .populate("permissions.moduleId")
-    .populate("permissions.permission"); 
+    .populate("permissions.permission")
+    .populate("levelId"); 
     return new ApiResponse(statusCode.OK, roles, "Role fetched successfully");
 
 }

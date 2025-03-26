@@ -4,8 +4,12 @@ import { STATUS } from "../config/statusConfig.js";
 const ModuleSchema = new mongoose.Schema({
   name: {
     type: String,
-    enum: ["User Management", "Role Management"],
     required: true,
+  },
+  
+  path: {
+    type: String,
+    default: "", // No need for required since it has a default value
   },
   desciption: {
     type: String,
@@ -20,7 +24,7 @@ const ModuleSchema = new mongoose.Schema({
       enum: Object.values(STATUS), 
       default: STATUS.ACTIVE 
     }
-});
+},{ timestamps: true });
 
 const Module = mongoose.model("Module", ModuleSchema);
 export default Module;

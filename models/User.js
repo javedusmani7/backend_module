@@ -10,9 +10,8 @@ const UserSchema = new mongoose.Schema({
   status: { 
     type: String, 
     enum: Object.values(STATUS), 
-    default: STATUS.ACTIVE 
   }
-});
+},{ timestamps: true });
 
 const User = mongoose.model("User", UserSchema);
 export default User;
