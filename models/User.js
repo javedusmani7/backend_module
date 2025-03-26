@@ -10,7 +10,6 @@ const UserSchema = new mongoose.Schema({
   status: { 
     type: String, 
     enum: Object.values(STATUS), 
-    default: STATUS.ACTIVE 
   }
 });
 
