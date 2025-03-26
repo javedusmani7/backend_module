@@ -24,7 +24,7 @@ const ModuleSchema = new mongoose.Schema({
       enum: Object.values(STATUS), 
       default: STATUS.ACTIVE 
     }
-});
+},{ timestamps: true });
 
 const Module = mongoose.model("Module", ModuleSchema);
 export default Module;

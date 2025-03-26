@@ -17,7 +17,7 @@ const permissionSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
       },
-});
+},{ timestamps: true });
 
 const Permission = mongoose.model("Permission", permissionSchema);
 export default Permission;

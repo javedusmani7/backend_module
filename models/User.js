@@ -11,7 +11,7 @@ const UserSchema = new mongoose.Schema({
     type: String, 
     enum: Object.values(STATUS), 
   }
-});
+},{ timestamps: true });
 
 const User = mongoose.model("User", UserSchema);
 export default User;
