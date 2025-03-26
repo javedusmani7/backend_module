@@ -172,12 +172,12 @@ export const updatePermissionService = async ({ _id, permission }) => {
 
 export const getRoleByIdService = async (roleId) => {
   logger.info(`Fetching role by ID: ${roleId}`);
-  const roles = await Role.findById(req)
+  const roles = await Role.findById(roleId)
   .populate("permissions.moduleId")
   .populate("permissions.permission")
   .populate("levelId"); 
   logger.info(`Role fetched: ${roleId}`);
-  return new ApiResponse(statusCode.OK, role, "Role fetched successfully");
+  return new ApiResponse(statusCode.OK, roles, "Role fetched successfully");
 };
 
 
