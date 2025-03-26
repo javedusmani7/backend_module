@@ -49,6 +49,7 @@ export const createRoleSchema = Joi.object({
     )
     .min(1)
     .required(),
+  levelId: Joi.string().hex().length(24).required()
 });
 
 export const updateRoleSchema = Joi.object({
@@ -68,14 +69,16 @@ export const updateRoleSchema = Joi.object({
         }).required(),
       })
     )
-    .required(), 
+    .required(),
+  levelId: Joi.string().hex().length(24).required()
+
 });
 
 export const updateUserSchema = Joi.object({
   _id: Joi.string().hex().length(24).required(),
   name: Joi.string().optional(),
   email: Joi.string().email().optional(),
-  role: Joi.string().hex().length(24).optional(), 
+  role: Joi.string().hex().length(24).optional(),
 })
 
 

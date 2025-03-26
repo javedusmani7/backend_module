@@ -43,7 +43,7 @@ export const createRole = asyncHandler(async (req, res) => {
   if (error) {
     throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
   }
-  const result = await createRoleService(req.body);
+  const result = await createRoleService(req);
   res.status(result.statusCode).json(result);
 });
 

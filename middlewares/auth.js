@@ -6,6 +6,8 @@ import Role from "../models/Role.js";
 import { statusCode } from "../config/config.js";
 import Module from "../models/Module.js";
 import Permission from "../models/Permission.js";
+import { getRoleByIdService } from "../services/module.js";
+import { getLevelByIdService } from "../services/level.js";
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
   const token = req.cookies?.authToken;
@@ -31,10 +33,7 @@ export const verifyPermission = asyncHandler(async (req, res, next) => {
   }  
   if (req.body.module) {
     delete req.body.module;
-  }  
-
-  console.log(module);
-  
+  }    
   const module_id = await Module.findOne({"name": module}).select("_id");
   
   if (!module_id?._id) {
@@ -50,6 +49,21 @@ export const verifyPermission = asyncHandler(async (req, res, next) => {
     return next(new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation"));
   }
   next();
+});
+
+export const verifyLevel = asyncHandler(async (req, res, next) => {
+  const { role } = req.user;
+  const { levelId } = req.body;
+  const roleData = await getRoleByIdService(role);
+  const levelData = await getLevelByIdService(levelId);
+  const userLevel = roleData.data.levelId.levelId;
+  const roleLevel = levelData.data.levelId;
+  console.log("ROLEDATA",userLevel);
+  console.log("LEVEL DATA",roleLevel);
+  if (userLevel >= roleLevel) {
+    return next(new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation"));
+  }
+  return next();
 });
 
 export const verifyAdmin = asyncHandler(async (req, res, next) => {

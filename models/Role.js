@@ -30,6 +30,20 @@ const RoleSchema = new mongoose.Schema({
   defaultRole:{
     type: Boolean,
     default: false
+  },
+  levelId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Level",
+  },
+  parentLevel: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Level",
+    default: []
+  }],
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null
   }
 }, { timestamps: true });
 
