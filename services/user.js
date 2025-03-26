@@ -76,11 +76,6 @@ export const deleteUserService = async (req) => {
   const { _id } = req;
   logger.info(`Delete request for user ID: ${_id}`);
 
-  if (!mongoose.Types.ObjectId.isValid(_id)) {
-    logger.warn(`Invalid User ID format for deletion: ${_id}`);
-    return new ApiResponse(statusCode.BAD_REQUEST, null, "Invalid User ID");
-  }
-
   const user = await User.findByIdAndDelete(_id);
   if (!user) {
     logger.warn(`User not found for deletion: ${_id}`);
@@ -93,17 +88,12 @@ export const deleteUserService = async (req) => {
 
 // Admin Update User Service
 export const adminUpdateUserService = async (req) => {
-  const { _id, name, email, role } = req;
+  const { _id} = req;
   logger.info(`Update request for user ID: ${_id}`);
-
-  if (!mongoose.Types.ObjectId.isValid(_id)) {
-    logger.warn(`Invalid User ID format for update: ${_id}`);
-    return new ApiResponse(statusCode.BAD_REQUEST, null, "Invalid User ID");
-  }
 
   const updatedUser = await User.findByIdAndUpdate(
     _id,
-    { $set: { name, email, role } },
+    { $set: req},
     { new: true }
   )
     .select("-password")

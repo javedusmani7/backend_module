@@ -33,7 +33,7 @@ export const updateModule = asyncHandler(async (req, res) => {
   res.status(result.statusCode).json(result);
 });
 
-export const getModules = asyncHandler(async (req, res) => {
+export const getModules = asyncHandler(async (req, res) => {  
   const result = await getModulesService();
   res.status(result.statusCode).json(result);
 });
@@ -43,7 +43,7 @@ export const createRole = asyncHandler(async (req, res) => {
   if (error) {
     throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
   }
-  const result = await createRoleService(req.body);
+  const result = await createRoleService(req);
   res.status(result.statusCode).json(result);
 });
 

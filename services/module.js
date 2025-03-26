@@ -38,7 +38,13 @@ export const getModulesService = async () => {
 };
 
 // Role Services
-export const createRoleService = async ({ roleId, roleName, permissions }) => {
+
+export const createRoleService = async (req) => {
+  const { roleId, roleName, permissions, levelId } = req.body;
+  const roleID = req.user.role;
+  const userRoleData = await Role.findById(roleID);
+  const parentLevel = [...userRoleData.parentLevel, userRoleData.levelId];
+  const createdBy = req.user._id;  
   const searchRoleName = roleName.toUpperCase().trim();
   logger.info(`Creating role: ${searchRoleName}`);
 
@@ -55,7 +61,15 @@ export const createRoleService = async ({ roleId, roleName, permissions }) => {
     })
   );
 
-  const newRole = new Role({ roleId, roleName: searchRoleName, permissions: formattedPermissions });
+  const newRole = new Role({
+    roleId,
+    roleName:searchRoleName,
+    permissions: formattedPermissions,
+    levelId,
+    parentLevel,
+    createdBy
+  });
+
   const savedRole = await newRole.save();
   logger.info(`Role created successfully: ${searchRoleName}`);
 
@@ -64,13 +78,17 @@ export const createRoleService = async ({ roleId, roleName, permissions }) => {
 
 export const getRolesService = async () => {
   logger.info("Fetching all roles");
-  const roles = await Role.find({}).populate("permissions.moduleId").populate("permissions.permission");
+  const roles = await Role.find({})
+  .populate("permissions.moduleId")
+  .populate("permissions.permission")
+  .populate("levelId");
   logger.info(`Fetched ${roles.length} roles`);
   return new ApiResponse(statusCode.OK, roles, "Roles fetched successfully");
 };
 
-export const updateRoleService = async ({ _id, roleId, roleName, permissions }) => {
-  logger.info(`Updating role ID: ${_id}`);
+
+export const updateRoleService = async (req) => {
+  const {_id, roleId, roleName, permissions, levelId } = req;
 
   const existingRole = await Role.findById(_id);
   if (!existingRole) {
@@ -90,6 +108,8 @@ export const updateRoleService = async ({ _id, roleId, roleName, permissions }) 
   existingRole.roleId = roleId;
   existingRole.roleName = roleName;
   existingRole.permissions = formattedPermissions;
+  existingRole.levelId = levelId;
+
   const updatedRole = await existingRole.save();
   
   logger.info(`Role updated successfully: ${_id}`);
@@ -152,10 +172,14 @@ export const updatePermissionService = async ({ _id, permission }) => {
 
 export const getRoleByIdService = async (roleId) => {
   logger.info(`Fetching role by ID: ${roleId}`);
-  const role = await Role.findById(roleId).populate("permissions.moduleId").populate("permissions.permission");
+  const roles = await Role.findById(req)
+  .populate("permissions.moduleId")
+  .populate("permissions.permission")
+  .populate("levelId"); 
   logger.info(`Role fetched: ${roleId}`);
   return new ApiResponse(statusCode.OK, role, "Role fetched successfully");
 };
+
 
 // Blog Services
 const blogFilePath = path.join(process.cwd(), "data/blogs.json");

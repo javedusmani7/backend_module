@@ -22,9 +22,28 @@ const RoleSchema = new mongoose.Schema({
       ref: "Permission",
     },
   }],
-  defaulRole:{
+  status: { 
+    type: String, 
+    enum: Object.values(STATUS), 
+    default: STATUS.ACTIVE 
+  },
+  defaultRole:{
     type: Boolean,
     default: false
+  },
+  levelId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Level",
+  },
+  parentLevel: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Level",
+    default: []
+  }],
+  createdBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    default: null
   }
 }, { timestamps: true });
 
