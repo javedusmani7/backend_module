@@ -23,35 +23,6 @@ export const createLevelService = async (req) => {
 //     return new ApiResponse(statusCode.OK, levelData, "Level fetched successfully");
 // };
 
-<<<<<<< Updated upstream
-export const getAllLevelService = async (roleId) => {
-    console.log(roleId, "sa");
-  
-    // Fetch role details along with its level
-    const userRole = await Role.findById(roleId).populate("levelId");
-    console.log("Role ID:", userRole);
-  
-    if (!userRole) {
-      console.log("Role not found");
-      return new ApiResponse(statusCode.NOT_FOUND, null, "Role not found");
-    }
-  
-    const userLevel = userRole.levelId;
-  
-    console.log("User Level:", userLevel.levelId);
-  
-    const levelData = await Level.find({
-      levelId: { $gt: userLevel.levelId },
-    }).sort({ levelId: 1 });
-    console.log("Filtered Levels:", levelData);
-  
-    return new ApiResponse(
-      statusCode.OK,
-      levelData,
-      "Level fetched successfully"
-    );
-  };
-=======
 export const getAllLevelService = async (req) => {
   
   const { role } = req;
@@ -63,7 +34,6 @@ export const getAllLevelService = async (req) => {
     "Level fetched successfully"
   );
 };
->>>>>>> Stashed changes
 
 export const deleteLevelByIdService = async (req) => {
   const levelData = await Level.findById(req);
