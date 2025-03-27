@@ -7,6 +7,7 @@ import logger from "../logger.js";
 import fs from "fs";
 import path from "path";
 import Level from "../models/Level.js";
+import { apiError } from "../utils/apiError.js";
 
 
 // Module Services
@@ -41,7 +42,7 @@ export const getModulesService = async () => {
 // Role Services
 
 export const createRoleService = async (req) => {
-  const { roleId, roleName, permissions, levelId } = req.body;
+  const { roleName, permissions, levelId } = req.body;
   const roleID = req.user.role;
   const userRoleData = await Role.findById(roleID);
   const parentLevel = [...userRoleData.parentLevel, userRoleData.levelId];
@@ -52,7 +53,7 @@ export const createRoleService = async (req) => {
   const existingRole = await Role.findOne({ roleName: searchRoleName });
   if (existingRole) {
     logger.warn(`Role already exists: ${searchRoleName}`);
-    return new ApiResponse(statusCode.ALREADY_EXISTS, existingRole, "Role already exists");
+    throw new apiError(statusCode.ALREADY_EXISTS, "Role already exists", existingRole);
   }
 
   const formattedPermissions = await Promise.all(
@@ -63,7 +64,6 @@ export const createRoleService = async (req) => {
   );
 
   const newRole = new Role({
-    roleId,
     roleName:searchRoleName,
     permissions: formattedPermissions,
     levelId,
@@ -99,7 +99,7 @@ export const updateRoleService = async (req) => {
   const existingRole = await Role.findById(_id);
   if (!existingRole) {
     logger.warn(`Role not found: ${_id}`);
-    throw new ApiResponse(statusCode.NOT_FOUND, null, "Role not found");
+    throw new apiError(statusCode.NOT_FOUND, "Role not found");
   }
 
   const formattedPermissions = await Promise.all(
@@ -127,12 +127,12 @@ export const deleteRoleService = async (roleId) => {
   const role = await Role.findById(roleId);
   if (!role) {
     logger.warn(`Role not found: ${roleId}`);
-    return new ApiResponse(statusCode.NOT_FOUND, null, "Role not found");
+    throw new apiError(statusCode.NOT_FOUND, "Role not found");
   }
 
   if (role.defaultRole) {
     logger.warn(`Attempt to delete a default role: ${roleId}`);
-    return new ApiResponse(statusCode.LACK_PERMISSION, null, "Cannot delete default roles");
+    throw new apiError(statusCode.LACK_PERMISSION, "Cannot delete default roles");
   }
 
   const deletedPermissions = await Promise.all(

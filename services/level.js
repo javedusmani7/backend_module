@@ -2,6 +2,7 @@ import { statusCode } from "../config/config.js";
 import Level from "../models/Level.js";
 import Role from "../models/Role.js";
 import User from "../models/User.js";
+import { apiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 
 export const createLevelService = async (req) => {
@@ -38,7 +39,7 @@ export const getAllLevelService = async (req) => {
 export const deleteLevelByIdService = async (req) => {
   const levelData = await Level.findById(req);
   if (!levelData._id) {
-    return new ApiResponse(statusCode.NOT_FOUND, null, "Level not found");
+    throw new apiError(statusCode.NOT_FOUND, "Level not found");
   }
 };
 
