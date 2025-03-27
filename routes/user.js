@@ -1,5 +1,5 @@
 import express from "express";
-import { register, login, getUsers, deleteUser, adminUpdateUser, updateUserRole } from "../controllers/userController.js";
+import { register, login, getUsers, deleteUser, adminUpdateUser } from "../controllers/userController.js";
 import { apiLimiter } from "../middlewares/rateLimiter.js";
 import moduleRoutes from "./module.js";
 import { verifyAdmin, verifyJWT, verifyPermission } from "../middlewares/auth.js";
@@ -12,7 +12,6 @@ router.post("/delete", verifyJWT, verifyPermission, deleteUser);
 router.post("/register", register);
 router.post("/login", login);
 router.post('/update/updatebyadmin',verifyJWT, verifyPermission, adminUpdateUser);
-router.post("/update/userLevel",verifyJWT, updateUserRole);
 router.use(moduleRoutes);
 
 export default router;

@@ -87,32 +87,32 @@ export const deleteUserService = async (req) => {
 };
 
 // Admin Update User Service
+// export const adminUpdateUserService = async (req) => {
+//   const { _id } = req;
+//   logger.info(`Update request for user ID: ${_id}`);
+
+//   const updatedUser = await User.findByIdAndUpdate(
+//     _id,
+//     { $set: req },
+//     { new: true }
+//   )
+//     .select("-password")
+//     .populate("role", "roleId roleName _id");
+
+//   if (!updatedUser) {
+//     logger.warn(`User not found for update: ${_id}`);
+//     return new ApiResponse(statusCode.NOT_FOUND, null, "User not found");
+//   }
+
+//   logger.info(`User updated successfully: ${_id}`);
+//   return new ApiResponse(statusCode.OK, updatedUser, "User updated successfully");
+// };
+
 export const adminUpdateUserService = async (req) => {
-  const { _id } = req;
-  logger.info(`Update request for user ID: ${_id}`);
-
-  const updatedUser = await User.findByIdAndUpdate(
-    _id,
-    { $set: req },
-    { new: true }
-  )
-    .select("-password")
-    .populate("role", "roleId roleName _id");
-
-  if (!updatedUser) {
-    logger.warn(`User not found for update: ${_id}`);
-    return new ApiResponse(statusCode.NOT_FOUND, null, "User not found");
-  }
-
-  logger.info(`User updated successfully: ${_id}`);
-  return new ApiResponse(statusCode.OK, updatedUser, "User updated successfully");
-};
-
-export const updateUserRoleService = async (req) => {
-  const { role } = req.user;
-  const { userId, roleId } = req.body;
-  const userRoleData = await Role.findById(role).populate("levelId");
-  const assignUserRoleData = await User.findById(userId).populate({
+  const { role } = req.user;  
+  const { _id } = req.body;
+  const userRoleData = await Role.findById(role).populate("levelId");  
+  const assignUserRoleData = await User.findById(_id).populate({
     path: "role",
     populate: {
       path: "levelId",
@@ -124,6 +124,6 @@ export const updateUserRoleService = async (req) => {
   if (userPreviousRole < loginUserRole) {
     return new ApiResponse(statusCode.LACK_PERMISSION, null, "You don't have permission for the operation");
   }
-  const updateuserData = await User.findByIdAndUpdate(userId, { $set: { role: roleId } }, { new: true });
+  const updateuserData = await User.findByIdAndUpdate(_id, { $set: req.body }, { new: true });
     return new ApiResponse(statusCode.CREATED, updateuserData, "User role updated successfully");
 }

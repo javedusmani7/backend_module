@@ -78,9 +78,10 @@ export const updateUserSchema = Joi.object({
   _id: Joi.string().hex().length(24).required(),
   name: Joi.string().optional(),
   email: Joi.string().email().optional(),
-});
+  role: Joi.string().hex().length(24).optional(),
+})
 
 
 export const roleIdSchema = Joi.object({
   _id: Joi.string().hex().length(24).required(),
-});
+})
