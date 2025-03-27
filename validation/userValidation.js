@@ -13,5 +13,10 @@ export const userLoginSchema = Joi.object({
 
 export const deleteUserSchema = Joi.object({
   _id: Joi.string().trim().required()
-})
+});
+
+export const updateRoleSchema = Joi.object({
+  userId: Joi.string().hex().length(24).required(),
+  roleId: Joi.string().hex().length(24).required(),
+});
 

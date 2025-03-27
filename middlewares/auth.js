@@ -58,8 +58,6 @@ export const verifyLevel = asyncHandler(async (req, res, next) => {
   const levelData = await getLevelByIdService(levelId);
   const userLevel = roleData.data.levelId.levelId;
   const roleLevel = levelData.data.levelId;
-  console.log("ROLEDATA",userLevel);
-  console.log("LEVEL DATA",roleLevel);
   if (userLevel >= roleLevel) {
     return next(new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation"));
   }

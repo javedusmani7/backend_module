@@ -13,7 +13,7 @@ router.delete("/module", verifyJWT, verifyPermission, deleteModule);
 router.post("/getModule", verifyJWT, getModules);
 router.post("/createRole",verifyJWT, verifyLevel, createRole);
 router.post("/deleteRole", verifyJWT, verifyPermission, deleteRole);
-router.post("/getRole", getRoles);
+router.post("/getRole",verifyJWT, getRoles);
 router.put("/updateRole", verifyJWT, verifyPermission, updateRole);
 router.put("/role/permission", verifyJWT, verifyPermission, updatePermission);
 router.post("/rolebyid", verifyJWT, getRoleByID);

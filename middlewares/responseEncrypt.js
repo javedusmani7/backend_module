@@ -21,7 +21,6 @@ const responseEncrypt = (req, res, next) => {
             const encryptedData = encryptResponse(JSON.stringify(data));
             originalJson.call(res, { data: encryptedData });
         } catch (error) {
-            console.error("Encryption error:", error.message);
             originalJson.call(res, { error: "Failed to encrypt response" });
         }
     };
