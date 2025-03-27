@@ -23,6 +23,7 @@ export const createLevelService = async (req) => {
 //     return new ApiResponse(statusCode.OK, levelData, "Level fetched successfully");
 // };
 
+<<<<<<< Updated upstream
 export const getAllLevelService = async (roleId) => {
     console.log(roleId, "sa");
   
@@ -50,6 +51,19 @@ export const getAllLevelService = async (roleId) => {
       "Level fetched successfully"
     );
   };
+=======
+export const getAllLevelService = async (req) => {
+  
+  const { role } = req;
+  const userRoleData = await Role.findById(role).populate("levelId");
+  const levelData = await Level.find({ levelId: { $gt: userRoleData.levelId.levelId } })
+  return new ApiResponse(
+    statusCode.OK,
+    levelData,
+    "Level fetched successfully"
+  );
+};
+>>>>>>> Stashed changes
 
 export const deleteLevelByIdService = async (req) => {
   const levelData = await Level.findById(req);

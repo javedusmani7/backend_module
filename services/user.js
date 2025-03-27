@@ -88,12 +88,12 @@ export const deleteUserService = async (req) => {
 
 // Admin Update User Service
 export const adminUpdateUserService = async (req) => {
-  const { _id} = req;
+  const { _id } = req;
   logger.info(`Update request for user ID: ${_id}`);
 
   const updatedUser = await User.findByIdAndUpdate(
     _id,
-    { $set: req},
+    { $set: req },
     { new: true }
   )
     .select("-password")
@@ -107,3 +107,23 @@ export const adminUpdateUserService = async (req) => {
   logger.info(`User updated successfully: ${_id}`);
   return new ApiResponse(statusCode.OK, updatedUser, "User updated successfully");
 };
+
+export const updateUserRoleService = async (req) => {
+  const { role } = req.user;
+  const { userId, roleId } = req.body;
+  const userRoleData = await Role.findById(role).populate("levelId");
+  const assignUserRoleData = await User.findById(userId).populate({
+    path: "role",
+    populate: {
+      path: "levelId",
+      select: "levelId"
+    }
+  });
+  const userPreviousRole = assignUserRoleData.role.levelId.levelId;
+  const loginUserRole = userRoleData.levelId.levelId;
+  if (userPreviousRole < loginUserRole) {
+    return new ApiResponse(statusCode.LACK_PERMISSION, null, "You don't have permission for the operation");
+  }
+  const updateuserData = await User.findByIdAndUpdate(userId, { $set: { role: roleId } }, { new: true });
+    return new ApiResponse(statusCode.CREATED, updateuserData, "User role updated successfully");
+}

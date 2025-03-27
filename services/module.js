@@ -6,6 +6,7 @@ import Role from "../models/Role.js";
 import logger from "../logger.js";
 import fs from "fs";
 import path from "path";
+import Level from "../models/Level.js";
 
 
 // Module Services
@@ -76,12 +77,17 @@ export const createRoleService = async (req) => {
   return new ApiResponse(statusCode.CREATED, savedRole, "Role created successfully");
 };
 
-export const getRolesService = async () => {
+export const getRolesService = async (req) => {
+  const { role } = req.user;
+  const userRoleData = await Role.findById(role).populate("levelId");
+  console.log("Role data", userRoleData.levelId.levelId);
+  const levelData = await Level.find({ levelId: { $gt: userRoleData.levelId.levelId } }).select("_id");
+  const levelIds = levelData.map((level) => level._id);  
   logger.info("Fetching all roles");
-  const roles = await Role.find({})
+  const roles = await Role.find({ levelId: { $in: levelIds } })
   .populate("permissions.moduleId")
   .populate("permissions.permission")
-  .populate("levelId");
+  .populate("levelId");  
   logger.info(`Fetched ${roles.length} roles`);
   return new ApiResponse(statusCode.OK, roles, "Roles fetched successfully");
 };
