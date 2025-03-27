@@ -23,39 +23,33 @@ export const createLevelService = async (req) => {
 //     return new ApiResponse(statusCode.OK, levelData, "Level fetched successfully");
 // };
 
-export const getAllLevelService = async (userId) => {
-  console.log(userId, "sa");
-
-  // Fetch user details along with their role
-  const user = await User.findById(userId).populate("role");
-  console.log("User ID:", user);
-
-  if (!user) {
-    console.log("User not found");
-    return new ApiResponse(statusCode.NOT_FOUND, null, "User not found");
-  }
-
-  const userRole = await Role.findById(user.role).populate("levelId");
-  if (!userRole) {
-    console.log("Role not found");
-    return new ApiResponse(statusCode.NOT_FOUND, null, "Role not found");
-  }
-
-  const userLevel = userRole.levelId;
-
-  console.log("User Level:", userLevel.levelId);
-
-  const levelData = await Level.find({
-    levelId: { $gt: userLevel.levelId },
-  }).sort({ levelId: 1 });
-  console.log("Filtered Levels:", levelData);
-
-  return new ApiResponse(
-    statusCode.OK,
-    levelData,
-    "Level fetched successfully"
-  );
-};
+export const getAllLevelService = async (roleId) => {
+    console.log(roleId, "sa");
+  
+    // Fetch role details along with its level
+    const userRole = await Role.findById(roleId).populate("levelId");
+    console.log("Role ID:", userRole);
+  
+    if (!userRole) {
+      console.log("Role not found");
+      return new ApiResponse(statusCode.NOT_FOUND, null, "Role not found");
+    }
+  
+    const userLevel = userRole.levelId;
+  
+    console.log("User Level:", userLevel.levelId);
+  
+    const levelData = await Level.find({
+      levelId: { $gt: userLevel.levelId },
+    }).sort({ levelId: 1 });
+    console.log("Filtered Levels:", levelData);
+  
+    return new ApiResponse(
+      statusCode.OK,
+      levelData,
+      "Level fetched successfully"
+    );
+  };
 
 export const deleteLevelByIdService = async (req) => {
   const levelData = await Level.findById(req);
