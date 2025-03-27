@@ -13,7 +13,13 @@ export const createLevel = asyncHandler(async (req, res) => {
 });
 
 export const getAllLevel = asyncHandler(async (req, res) => {
-    const result = await getAllLevelService();
+    const { userId } = req.body;
+    console.log(userId , "yja");
+    
+    if (!userId) {
+        return res.status(400).json({ message: "User ID is required" });
+    }
+    const result = await getAllLevelService(userId);
     res.status(result.statusCode).json(result);
 });
 
