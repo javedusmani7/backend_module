@@ -1,5 +1,6 @@
 import { statusCode } from "../config/config.js";
 import { createLevelService, deleteLevelByIdService, getAllLevelService } from "../services/level.js";
+import { apiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { createLevelSchema, deleteLevelSchema } from "../validation/levelValidation.js";
 

@@ -12,14 +12,14 @@ import { getLevelByIdService } from "../services/level.js";
 export const verifyJWT = asyncHandler(async (req, res, next) => {
   const token = req.cookies?.authToken;
   if (!token) {
-    return next(new apiError(401, "Unauthorized request"));
+    throw new apiError(401, "Unauthorized request");
   }
 
   const decodedToken = jwt.verify(token, process.env.TOKEN_SECRET);
   const user = await User.findById(decodedToken.id || decodedToken._id).select("-password");// Ensure token payload contains correct user ID key
 
   if (!user) {
-    return next(new apiError(401, "Invalid access token"));
+    throw new apiError(401, "Invalid access token");
   }
   req.user = user;
   next();
@@ -37,16 +37,16 @@ export const verifyPermission = asyncHandler(async (req, res, next) => {
   const module_id = await Module.findOne({"name": module}).select("_id");
   
   if (!module_id?._id) {
-    return next(new apiError(statusCode.NOT_FOUND, "Module not found"));
+    throw new apiError(statusCode.NOT_FOUND, "Module not found");
   }
   const roleData = await Role.findById(role).select("permissions -_id"); 
   const index = roleData.permissions.findIndex(item => item.moduleId.equals(module_id._id)); 
   if (index == -1) {
-    return next(new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation"));
+    throw new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation");
   } 
   const permission = await Permission.findById(roleData.permissions[index].permission)
   if (!permission[operation]) {
-    return next(new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation"));
+    throw new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation");
   }
   next();
 });
@@ -59,7 +59,7 @@ export const verifyLevel = asyncHandler(async (req, res, next) => {
   const userLevel = roleData.data.levelId.levelId;
   const roleLevel = levelData.data.levelId;
   if (userLevel >= roleLevel) {
-    return next(new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation"));
+    throw new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation");
   }
   return next();
 });
@@ -69,7 +69,7 @@ export const verifyAdmin = asyncHandler(async (req, res, next) => {
   const adminRole = await Role.findById(role)
 
   if (adminRole.roleName !== "OWNER") {
-    return next(new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation"));
+    throw new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation");
   }
   return next();
 })
