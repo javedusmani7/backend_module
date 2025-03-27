@@ -33,7 +33,6 @@ export const updateModuleSchema = Joi.object({
 });
 
 export const createRoleSchema = Joi.object({
-  roleId: Joi.number().required(),
   roleName: Joi.string().required(),
   permissions: Joi.array()
     .items(
@@ -54,7 +53,6 @@ export const createRoleSchema = Joi.object({
 
 export const updateRoleSchema = Joi.object({
   _id: Joi.string(), // MongoDB ObjectId validation
-  roleId: Joi.number().required(), // Role ID must be a number
   roleName: Joi.string().required(), // Role name must be a string
   permissions: Joi.array()
     .items(

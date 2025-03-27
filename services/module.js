@@ -41,7 +41,7 @@ export const getModulesService = async () => {
 // Role Services
 
 export const createRoleService = async (req) => {
-  const { roleId, roleName, permissions, levelId } = req.body;
+  const { roleName, permissions, levelId } = req.body;
   const roleID = req.user.role;
   const userRoleData = await Role.findById(roleID);
   const parentLevel = [...userRoleData.parentLevel, userRoleData.levelId];
@@ -63,7 +63,6 @@ export const createRoleService = async (req) => {
   );
 
   const newRole = new Role({
-    roleId,
     roleName:searchRoleName,
     permissions: formattedPermissions,
     levelId,

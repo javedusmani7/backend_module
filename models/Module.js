@@ -6,11 +6,6 @@ const ModuleSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  
-  path: {
-    type: String,
-    default: "", // No need for required since it has a default value
-  },
   desciption: {
     type: String,
   },
