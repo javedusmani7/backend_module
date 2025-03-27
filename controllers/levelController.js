@@ -13,15 +13,7 @@ export const createLevel = asyncHandler(async (req, res) => {
 });
 
 export const getAllLevel = asyncHandler(async (req, res) => {
-<<<<<<< Updated upstream
-    const { roleId } = req.body; // Get roleId from request body
-    if (!roleId) {
-      return res.status(400).json({ message: "Role ID is required" });
-    }
-    const result = await getAllLevelService(roleId);
-=======
     const result = await getAllLevelService(req.user);
->>>>>>> Stashed changes
     res.status(result.statusCode).json(result);
   });
   
