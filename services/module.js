@@ -77,6 +77,37 @@ export const createRoleService = async (req) => {
   return new ApiResponse(statusCode.CREATED, savedRole, "Role created successfully");
 };
 
+//Test
+export const createRoleServiceTest = async (req) => {
+  const { roleName, permissions, levelId } = req.body; 
+  const searchRoleName = roleName.toUpperCase().trim();
+  logger.info(`Creating role: ${searchRoleName}`);
+
+  const existingRole = await Role.findOne({ roleName: searchRoleName });
+  if (existingRole) {
+    logger.warn(`Role already exists: ${searchRoleName}`);
+    throw new apiError(statusCode.ALREADY_EXISTS, "Role already exists", existingRole);
+  }
+
+  const formattedPermissions = await Promise.all(
+    permissions.map(async ({ moduleId, permission }) => {
+      const permissionData = await new Permission(permission).save();
+      return { moduleId, permission: permissionData._id };
+    })
+  );
+
+  const newRole = new Role({
+    roleName:searchRoleName,
+    permissions: formattedPermissions,
+    levelId,
+  });
+
+  const savedRole = await newRole.save();
+  logger.info(`Role created successfully: ${searchRoleName}`);
+
+  return new ApiResponse(statusCode.CREATED, savedRole, "Role created successfully");
+};
+
 export const getRolesService = async (req) => {
   const { role } = req.user;
   const userRoleData = await Role.findById(role).populate("levelId");
