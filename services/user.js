@@ -51,7 +51,7 @@ export const loginService = async (req) => {
   const isMatch = await comparePassword(password, user.password);
   if (!isMatch) {
     logger.warn(`Invalid login attempt: ${email}`);
-    throw new apiError(statusCode.UNAUTHORIZED, "Invalid credentials");
+    throw new apiError(statusCode.UNAUTHORIZED, "Password mismatch");
   }
 
   // Secure JWT payload
@@ -86,32 +86,10 @@ export const deleteUserService = async (req) => {
   return new ApiResponse(statusCode.OK, user, "User has been deleted successfully");
 };
 
-// Admin Update User Service
-// export const adminUpdateUserService = async (req) => {
-//   const { _id } = req;
-//   logger.info(`Update request for user ID: ${_id}`);
-
-//   const updatedUser = await User.findByIdAndUpdate(
-//     _id,
-//     { $set: req },
-//     { new: true }
-//   )
-//     .select("-password")
-//     .populate("role", "roleId roleName _id");
-
-//   if (!updatedUser) {
-//     logger.warn(`User not found for update: ${_id}`);
-//     return new ApiResponse(statusCode.NOT_FOUND, null, "User not found");
-//   }
-
-//   logger.info(`User updated successfully: ${_id}`);
-//   return new ApiResponse(statusCode.OK, updatedUser, "User updated successfully");
-// };
-
 export const adminUpdateUserService = async (req) => {
-  const { role } = req.user;  
+  const { role } = req.user;
   const { _id } = req.body;
-  const userRoleData = await Role.findById(role).populate("levelId");  
+  const userRoleData = await Role.findById(role).populate("levelId");
   const assignUserRoleData = await User.findById(_id).populate({
     path: "role",
     populate: {
@@ -125,5 +103,28 @@ export const adminUpdateUserService = async (req) => {
     throw new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation");
   }
   const updateuserData = await User.findByIdAndUpdate(_id, { $set: req.body }, { new: true }).populate("role").exec();
-    return new ApiResponse(statusCode.CREATED, updateuserData, "User role updated successfully");
-}
+  return new ApiResponse(statusCode.CREATED, updateuserData, "User role updated successfully");
+};
+
+export const getUsersByIdService = async (userId) => {
+  const userData = await User.findById(userId).populate({
+    path: "role",
+    populate: {
+      path: "levelId",
+      select: "levelId"
+    }
+  }).select('-password');
+  return new ApiResponse(statusCode.OK, userData, "User fetched successfully");
+};
+
+export const updateUserService = async (req) => {
+  const { _id } = req;
+  const updatedUser = await User.findByIdAndUpdate(_id, { $set: req }, { new: true }).populate({
+    path: "role",
+    populate: {
+      path: "levelId",
+      select: "levelId"
+    }
+  }).select('-password');
+  return new ApiResponse(statusCode.CREATED, updatedUser, "User updated successfully");
+};
