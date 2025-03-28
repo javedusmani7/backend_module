@@ -16,13 +16,13 @@ export const registerService = async (req) => {
   let role = await Role.findOne({ roleName: "USER" });
   if (!role) {
     logger.warn(`USER role not found for email: ${email}`);
-    return new ApiResponse(statusCode.NOT_FOUND, null, "USER role does not exist");
+    throw new apiError(statusCode.NOT_FOUND, "USER role does not exist");
   }
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
     logger.warn(`User already exists: ${email}`);
-    return new ApiResponse(statusCode.ALREADY_EXISTS, existingUser, "User already exists");
+    throw new apiError(statusCode.ALREADY_EXISTS, "User already exists", existingUser);
   }
 
   const hashedPassword = await encryptPassword(password);
@@ -45,13 +45,13 @@ export const loginService = async (req) => {
   const user = await User.findOne({ email }).populate("role", "roleId roleName");
   if (!user) {
     logger.warn(`Login failed: User not found (${email})`);
-    return new ApiResponse(statusCode.NOT_FOUND, null, "User not found");
+    throw new apiError(statusCode.NOT_FOUND, "User not found");
   }
 
   const isMatch = await comparePassword(password, user.password);
   if (!isMatch) {
     logger.warn(`Invalid login attempt: ${email}`);
-    return new ApiResponse(statusCode.UNAUTHORIZED, null, "Invalid credentials");
+    throw new apiError(statusCode.UNAUTHORIZED, "Invalid credentials");
   }
 
   // Secure JWT payload
@@ -79,7 +79,7 @@ export const deleteUserService = async (req) => {
   const user = await User.findByIdAndDelete(_id);
   if (!user) {
     logger.warn(`User not found for deletion: ${_id}`);
-    return new ApiResponse(statusCode.NOT_FOUND, null, "User not found");
+    throw new apiError(statusCode.NOT_FOUND, "User not found");
   }
 
   logger.info(`User deleted successfully: ${_id}`);
@@ -87,23 +87,43 @@ export const deleteUserService = async (req) => {
 };
 
 // Admin Update User Service
+// export const adminUpdateUserService = async (req) => {
+//   const { _id } = req;
+//   logger.info(`Update request for user ID: ${_id}`);
+
+//   const updatedUser = await User.findByIdAndUpdate(
+//     _id,
+//     { $set: req },
+//     { new: true }
+//   )
+//     .select("-password")
+//     .populate("role", "roleId roleName _id");
+
+//   if (!updatedUser) {
+//     logger.warn(`User not found for update: ${_id}`);
+//     return new ApiResponse(statusCode.NOT_FOUND, null, "User not found");
+//   }
+
+//   logger.info(`User updated successfully: ${_id}`);
+//   return new ApiResponse(statusCode.OK, updatedUser, "User updated successfully");
+// };
+
 export const adminUpdateUserService = async (req) => {
-  const { _id} = req;
-  logger.info(`Update request for user ID: ${_id}`);
-
-  const updatedUser = await User.findByIdAndUpdate(
-    _id,
-    { $set: req},
-    { new: true }
-  )
-    .select("-password")
-    .populate("role", "roleId roleName _id");
-
-  if (!updatedUser) {
-    logger.warn(`User not found for update: ${_id}`);
-    return new ApiResponse(statusCode.NOT_FOUND, null, "User not found");
+  const { role } = req.user;  
+  const { _id } = req.body;
+  const userRoleData = await Role.findById(role).populate("levelId");  
+  const assignUserRoleData = await User.findById(_id).populate({
+    path: "role",
+    populate: {
+      path: "levelId",
+      select: "levelId"
+    }
+  });
+  const userPreviousRole = assignUserRoleData.role.levelId.levelId;
+  const loginUserRole = userRoleData.levelId.levelId;
+  if (userPreviousRole < loginUserRole) {
+    throw new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation");
   }
-
-  logger.info(`User updated successfully: ${_id}`);
-  return new ApiResponse(statusCode.OK, updatedUser, "User updated successfully");
-};
+  const updateuserData = await User.findByIdAndUpdate(_id, { $set: req.body }, { new: true });
+    return new ApiResponse(statusCode.CREATED, updateuserData, "User role updated successfully");
+}

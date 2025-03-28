@@ -2,11 +2,6 @@ import mongoose from "mongoose";
 import { STATUS } from "../config/statusConfig.js";
 
 const RoleSchema = new mongoose.Schema({
-  roleId: { 
-    type: Number, 
-    unique: true, 
-    required: true, 
-  },
   roleName: { 
     type: String, 
     required: true,

@@ -10,7 +10,7 @@ import { errorHandler } from './utils/asyncHandler.js';
 import responseEncrypt from './middlewares/responseEncrypt.js';
 import logger from './logger.js';
 import { requestLogger, responseLogger } from './logger.js';
-import { errorHandlerWinston } from './middlewares/errorHandler.js';
+
 
 dotenv.config();
 
@@ -23,14 +23,13 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(cors(corsOptions));
 app.use(cookieParser());
-// app.use(responseEncrypt);
+app.use(responseEncrypt);
 
 app.use(requestLogger);  // Request Logging
 app.use(responseLogger); // Response Logging
 
 app.use("/api/users", userRoutes);
 app.use("/api/level",levelRoutes);
-// app.use(errorHandlerWinston); 
 app.use(errorHandler); 
 
 app.listen(PORT, () => {

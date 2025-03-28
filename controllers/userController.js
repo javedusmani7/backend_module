@@ -1,7 +1,7 @@
 import { apiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { statusCode } from "../config/config.js";
-import { userRegistrationSchema, userLoginSchema, deleteUserSchema } from "../validation/userValidation.js";
+import { userRegistrationSchema, userLoginSchema, deleteUserSchema, updateRoleSchema } from "../validation/userValidation.js";
 import { registerService, loginService, getUsersService, deleteUserService, adminUpdateUserService } from "../services/user.js";
 import { updateUserSchema } from "../validation/moduleValidation.js";
 
@@ -55,6 +55,15 @@ export const adminUpdateUser = asyncHandler(async ( req, res) => {
   if (error) {
     throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
   }
-  const result = await adminUpdateUserService(req.body);
+  const result = await adminUpdateUserService(req);
   res.status(statusCode.OK).json(result);
 })
+
+// export const updateUserRole = asyncHandler(async ( req, res) => {
+//   const { error } = updateRoleSchema.validate(req.body);
+//   if (error) {
+//     throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
+//   }
+//   const result = await updateUserRoleService(req);
+//   res.status(statusCode.OK).json(result);
+// });

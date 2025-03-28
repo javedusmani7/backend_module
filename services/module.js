@@ -6,6 +6,8 @@ import Role from "../models/Role.js";
 import logger from "../logger.js";
 import fs from "fs";
 import path from "path";
+import Level from "../models/Level.js";
+import { apiError } from "../utils/apiError.js";
 
 
 // Module Services
@@ -40,7 +42,7 @@ export const getModulesService = async () => {
 // Role Services
 
 export const createRoleService = async (req) => {
-  const { roleId, roleName, permissions, levelId } = req.body;
+  const { roleName, permissions, levelId } = req.body;
   const roleID = req.user.role;
   const userRoleData = await Role.findById(roleID);
   const parentLevel = [...userRoleData.parentLevel, userRoleData.levelId];
@@ -51,7 +53,7 @@ export const createRoleService = async (req) => {
   const existingRole = await Role.findOne({ roleName: searchRoleName });
   if (existingRole) {
     logger.warn(`Role already exists: ${searchRoleName}`);
-    return new ApiResponse(statusCode.ALREADY_EXISTS, existingRole, "Role already exists");
+    throw new apiError(statusCode.ALREADY_EXISTS, "Role already exists", existingRole);
   }
 
   const formattedPermissions = await Promise.all(
@@ -62,7 +64,6 @@ export const createRoleService = async (req) => {
   );
 
   const newRole = new Role({
-    roleId,
     roleName:searchRoleName,
     permissions: formattedPermissions,
     levelId,
@@ -76,12 +77,48 @@ export const createRoleService = async (req) => {
   return new ApiResponse(statusCode.CREATED, savedRole, "Role created successfully");
 };
 
-export const getRolesService = async () => {
+//Test
+export const createRoleServiceTest = async (req) => {
+  const { roleName, permissions, levelId } = req.body; 
+  const searchRoleName = roleName.toUpperCase().trim();
+  logger.info(`Creating role: ${searchRoleName}`);
+
+  const existingRole = await Role.findOne({ roleName: searchRoleName });
+  if (existingRole) {
+    logger.warn(`Role already exists: ${searchRoleName}`);
+    throw new apiError(statusCode.ALREADY_EXISTS, "Role already exists", existingRole);
+  }
+
+  const formattedPermissions = await Promise.all(
+    permissions.map(async ({ moduleId, permission }) => {
+      const permissionData = await new Permission(permission).save();
+      return { moduleId, permission: permissionData._id };
+    })
+  );
+
+  const newRole = new Role({
+    roleName:searchRoleName,
+    permissions: formattedPermissions,
+    levelId,
+  });
+
+  const savedRole = await newRole.save();
+  logger.info(`Role created successfully: ${searchRoleName}`);
+
+  return new ApiResponse(statusCode.CREATED, savedRole, "Role created successfully");
+};
+
+export const getRolesService = async (req) => {
+  const { role } = req.user;
+  const userRoleData = await Role.findById(role).populate("levelId");
+  console.log("Role data", userRoleData.levelId.levelId);
+  const levelData = await Level.find({ levelId: { $gt: userRoleData.levelId.levelId } }).select("_id");
+  const levelIds = levelData.map((level) => level._id);  
   logger.info("Fetching all roles");
-  const roles = await Role.find({})
+  const roles = await Role.find({ levelId: { $in: levelIds } })
   .populate("permissions.moduleId")
   .populate("permissions.permission")
-  .populate("levelId");
+  .populate("levelId");  
   logger.info(`Fetched ${roles.length} roles`);
   return new ApiResponse(statusCode.OK, roles, "Roles fetched successfully");
 };
@@ -93,7 +130,7 @@ export const updateRoleService = async (req) => {
   const existingRole = await Role.findById(_id);
   if (!existingRole) {
     logger.warn(`Role not found: ${_id}`);
-    throw new ApiResponse(statusCode.NOT_FOUND, null, "Role not found");
+    throw new apiError(statusCode.NOT_FOUND, "Role not found");
   }
 
   const formattedPermissions = await Promise.all(
@@ -121,12 +158,12 @@ export const deleteRoleService = async (roleId) => {
   const role = await Role.findById(roleId);
   if (!role) {
     logger.warn(`Role not found: ${roleId}`);
-    return new ApiResponse(statusCode.NOT_FOUND, null, "Role not found");
+    throw new apiError(statusCode.NOT_FOUND, "Role not found");
   }
 
   if (role.defaultRole) {
     logger.warn(`Attempt to delete a default role: ${roleId}`);
-    return new ApiResponse(statusCode.LACK_PERMISSION, null, "Cannot delete default roles");
+    throw new apiError(statusCode.LACK_PERMISSION, "Cannot delete default roles");
   }
 
   const deletedPermissions = await Promise.all(
@@ -172,7 +209,7 @@ export const updatePermissionService = async ({ _id, permission }) => {
 
 export const getRoleByIdService = async (roleId) => {
   logger.info(`Fetching role by ID: ${roleId}`);
-  const roles = await Role.findById(req)
+  const roles = await Role.findById(roleId)
   .populate("permissions.moduleId")
   .populate("permissions.permission")
   .populate("levelId"); 

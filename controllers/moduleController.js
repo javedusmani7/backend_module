@@ -1,6 +1,6 @@
 
 import { createModuleSchema, createRoleSchema, deleteModuleSchema, roleIdSchema, updateModuleSchema, updateRoleSchema } from "../validation/moduleValidation.js";
-import { createModuleService, createRoleService, deleteModuleService, deleteRoleService, getModulesService, getRoleByIdService, getRolesService, updateModuleService, updatePermissionService, updateRoleService, getBlogServices, getNewsServices  } from "../services/module.js";
+import { createModuleService, createRoleService, deleteModuleService, deleteRoleService, getModulesService, getRoleByIdService, getRolesService, updateModuleService, updatePermissionService, updateRoleService, getBlogServices, getNewsServices, createRoleServiceTest  } from "../services/module.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { statusCode } from "../config/config.js";
@@ -47,6 +47,17 @@ export const createRole = asyncHandler(async (req, res) => {
   res.status(result.statusCode).json(result);
 });
 
+
+//test
+export const createRoleTest = asyncHandler(async (req, res) => {
+  const { error } = createRoleSchema.validate(req.body);
+  if (error) {
+    throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
+  }
+  const result = await createRoleServiceTest(req);
+  res.status(result.statusCode).json(result);
+});
+
 export const deleteRole = asyncHandler(async (req, res) => {
   const { _id } = req.body;
   const result = await deleteRoleService(_id);
@@ -55,7 +66,7 @@ export const deleteRole = asyncHandler(async (req, res) => {
 
 
 export const getRoles = asyncHandler(async (req, res) => {
-  const result = await getRolesService();
+  const result = await getRolesService(req);
   res.status(result.statusCode).json(result);
 });
 
