@@ -177,7 +177,7 @@ export const getRoleByIdService = async (roleId) => {
   .populate("permissions.permission")
   .populate("levelId"); 
   logger.info(`Role fetched: ${roleId}`);
-  return new ApiResponse(statusCode.OK, role, "Role fetched successfully");
+  return new ApiResponse(statusCode.OK, roles, "Role fetched successfully");
 };
 
 
