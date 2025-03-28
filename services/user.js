@@ -124,6 +124,6 @@ export const adminUpdateUserService = async (req) => {
   if (userPreviousRole < loginUserRole) {
     throw new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation");
   }
-  const updateuserData = await User.findByIdAndUpdate(_id, { $set: req.body }, { new: true });
+  const updateuserData = await User.findByIdAndUpdate(_id, { $set: req.body }, { new: true }).populate("role").exec();
     return new ApiResponse(statusCode.CREATED, updateuserData, "User role updated successfully");
 }
