@@ -328,17 +328,7 @@ export const getRoleByIdService = async (roleId) => {
 
 
 // Blog Services
-const blogFilePath = path.join(process.cwd(), "data/blogs.json");
-// export const getBlogServices = async () => {
-//   logger.info("Fetching blog");
-//   const blog = await trackQueryTime(
-//     () => fs.readFileSync(blogFilePath, "utf8"),
-//     "fs.readFileSync",
-//     { filePath: blogFilePath }
-//   );
-//   logger.info("Fetched blog");
-//   return new ApiResponse(statusCode.OK, JSON.parse(blog), "Blog fetched successfully");
-// };
+
 export const getBlogServices = async () => {
   logger.info("Fetching blogs from database");
   const blogs = await trackQueryTime(() => Blog.find(), "Blog.find");
@@ -346,18 +336,7 @@ export const getBlogServices = async () => {
   return new ApiResponse(statusCode.OK, blogs, "Blogs fetched successfully");
 };
 
-// News Services
-const newsFilePath = path.join(process.cwd(), "data/news.json");
-// export const getNewsServices = async () => {
-//   logger.info("Fetching news");
-//   const news = await trackQueryTime(
-//     () => fs.readFileSync(newsFilePath, "utf8"),
-//     "fs.readFileSync",
-//     { filePath: newsFilePath }
-//   );
-//   logger.info("Fetched news");
-//   return new ApiResponse(statusCode.OK, JSON.parse(news), "News fetched successfully");
-// };
+
 export const getNewsServices = async () => {
   logger.info("Fetching news from database");
   const news = await trackQueryTime(() => News.find(), "News.find");
@@ -369,12 +348,9 @@ export const getNewsServices = async () => {
 //Update Blog Services
 export const updateBlogServices = async (blogData) => {
   try {
-    const { _id ,id, title, content } = blogData;
-    if (!id) {
-      throw new apiError(statusCode.BAD_REQUEST, "Blog ID is required");
-    }
+    const { _id , title, content } = blogData;
 
-    logger.info(`Updating blog with ID: ${id}`);
+    logger.info(`Updating blog with ID: ${_id}`);
 
     const updatedBlog = await Blog.findByIdAndUpdate(_id, blogData, { new: true, runValidators: true });
 
@@ -382,7 +358,7 @@ export const updateBlogServices = async (blogData) => {
       throw new apiError(statusCode.NOT_FOUND, "Blog not found");
     }
 
-    logger.info(`Blog updated successfully: ${id}`);
+    logger.info(`Blog updated successfully: ${_id}`);
     return new ApiResponse(statusCode.OK, updatedBlog, "Blog updated successfully");
   } catch (error) {
     logger.error(`Error updating blog: ${error.message}`);
