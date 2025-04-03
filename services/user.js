@@ -51,7 +51,7 @@ export const loginService = async (req) => {
   const isMatch = await comparePassword(password, user.password);
   if (!isMatch) {
     logger.warn(`Invalid login attempt: ${email}`);
-    throw new apiError(statusCode.UNAUTHORIZED, "Invalid credentials");
+    throw new apiError(statusCode.UNAUTHORIZED, "Password mismatch");
   }
 
   const payload = { id: user._id, email: user.email, role: user.role };
@@ -86,9 +86,9 @@ export const deleteUserService = async (req) => {
 };
 
 export const adminUpdateUserService = async (req) => {
-  const { role } = req.user;  
+  const { role } = req.user;
   const { _id } = req.body;
-  const userRoleData = await trackQueryTime(() => Role.findById(role).populate("levelId"), "Role.findById", { role });  
+  const userRoleData = await trackQueryTime(() => Role.findById(role).populate("levelId"));  
   const assignUserRoleData = await trackQueryTime(() => User.findById(_id).populate({
     path: "role",
     populate: {
@@ -103,6 +103,30 @@ export const adminUpdateUserService = async (req) => {
     throw new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation");
   }
   
-  const updateuserData = await trackQueryTime(() => User.findByIdAndUpdate(_id, { $set: req.body }, { new: true }), "User.findByIdAndUpdate", { _id });
+  const updateuserData = await trackQueryTime(() => User.findByIdAndUpdate(_id, { $set: req.body }, { new: true }).populate("role").exec());
   return new ApiResponse(statusCode.CREATED, updateuserData, "User role updated successfully");
+};
+
+
+export const getUsersByIdService = async (userId) => {
+  const userData = await User.findById(userId).populate({
+    path: "role",
+    populate: {
+      path: "levelId",
+      select: "levelId"
+    }
+  }).select('-password');
+  return new ApiResponse(statusCode.OK, userData, "User fetched successfully");
+};
+
+export const updateUserService = async (req) => {
+  const { _id } = req;
+  const updatedUser = await User.findByIdAndUpdate(_id, { $set: req }, { new: true }).populate({
+    path: "role",
+    populate: {
+      path: "levelId",
+      select: "levelId"
+    }
+  }).select('-password');
+  return new ApiResponse(statusCode.CREATED, updatedUser, "User updated successfully");
 };
