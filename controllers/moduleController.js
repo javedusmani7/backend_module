@@ -4,6 +4,7 @@ import { createModuleService, createRoleService, deleteModuleService, deleteRole
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { statusCode } from "../config/config.js";
+import { blogSchema, deleteBlogSchema, updateBlogSchema } from "../validation/blogValidation.js";
 
 
 export const createModule = asyncHandler(async (req, res) => {
@@ -102,8 +103,13 @@ export const getBlog = asyncHandler(async (req, res) => {
 //add blog
 export const addBlog = async (req, res, next) => {
   try {
-    const blogData = req.body;
+   
 
+    const { error } = blogSchema.validate(req.body);
+    if (error) {
+      throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
+    }
+    const blogData = req.body;
     const response = await addBlogServices(blogData);
 
     res.status(response.statusCode).json(response);
@@ -115,6 +121,10 @@ export const addBlog = async (req, res, next) => {
 //update blog
 export const updateBlog = async (req, res, next) => {
   try {
+    const { error } = updateBlogSchema.validate(req.body);
+    if (error) {
+      throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
+    }
     const blogData = req.body;
 
     const response = await updateBlogServices(blogData);
@@ -129,6 +139,10 @@ export const updateBlog = async (req, res, next) => {
 //delete blog
 export const deleteBlog = async (req, res, next) => {
   try {
+    const { error } = deleteBlogSchema.validate(req.body);
+    if (error) {
+      throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
+    }
     const { _id } = req.body;
 
     const response = await deleteBlogServices(_id);

@@ -337,14 +337,6 @@ export const getBlogServices = async () => {
 };
 
 
-export const getNewsServices = async () => {
-  logger.info("Fetching news from database");
-  const news = await trackQueryTime(() => News.find(), "News.find");
-  logger.info("Fetched news from database");
-  return new ApiResponse(statusCode.OK, news, "News fetched successfully");
-};
-
-
 export const addBlogServices = async (blogData) => {
   try {
     const { title, content } = blogData;
@@ -405,3 +397,13 @@ export const deleteBlogServices = async (blogId) => {
   logger.info(`Blog deleted successfully: ${blogId}`);
   return new ApiResponse(statusCode.OK, deletedBlog, "Blog deleted successfully");
 };
+
+// News Services
+
+export const getNewsServices = async () => {
+  logger.info("Fetching news from database");
+  const news = await trackQueryTime(() => News.find(), "News.find");
+  logger.info("Fetched news from database");
+  return new ApiResponse(statusCode.OK, news, "News fetched successfully");
+};
+
