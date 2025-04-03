@@ -8,6 +8,9 @@ import fs from "fs";
 import path from "path";
 import Level from "../models/Level.js";
 import { apiError } from "../utils/apiError.js";
+import Blog from "../models/Blog.js";
+import News from "../models/News.js";
+import { log } from "console";
 
 
 // Module Services
@@ -326,26 +329,82 @@ export const getRoleByIdService = async (roleId) => {
 
 // Blog Services
 const blogFilePath = path.join(process.cwd(), "data/blogs.json");
+// export const getBlogServices = async () => {
+//   logger.info("Fetching blog");
+//   const blog = await trackQueryTime(
+//     () => fs.readFileSync(blogFilePath, "utf8"),
+//     "fs.readFileSync",
+//     { filePath: blogFilePath }
+//   );
+//   logger.info("Fetched blog");
+//   return new ApiResponse(statusCode.OK, JSON.parse(blog), "Blog fetched successfully");
+// };
 export const getBlogServices = async () => {
-  logger.info("Fetching blog");
-  const blog = await trackQueryTime(
-    () => fs.readFileSync(blogFilePath, "utf8"),
-    "fs.readFileSync",
-    { filePath: blogFilePath }
-  );
-  logger.info("Fetched blog");
-  return new ApiResponse(statusCode.OK, JSON.parse(blog), "Blog fetched successfully");
+  logger.info("Fetching blogs from database");
+  const blogs = await trackQueryTime(() => Blog.find(), "Blog.find");
+  logger.info("Fetched blogs from database");
+  return new ApiResponse(statusCode.OK, blogs, "Blogs fetched successfully");
 };
 
 // News Services
 const newsFilePath = path.join(process.cwd(), "data/news.json");
+// export const getNewsServices = async () => {
+//   logger.info("Fetching news");
+//   const news = await trackQueryTime(
+//     () => fs.readFileSync(newsFilePath, "utf8"),
+//     "fs.readFileSync",
+//     { filePath: newsFilePath }
+//   );
+//   logger.info("Fetched news");
+//   return new ApiResponse(statusCode.OK, JSON.parse(news), "News fetched successfully");
+// };
 export const getNewsServices = async () => {
-  logger.info("Fetching news");
-  const news = await trackQueryTime(
-    () => fs.readFileSync(newsFilePath, "utf8"),
-    "fs.readFileSync",
-    { filePath: newsFilePath }
+  logger.info("Fetching news from database");
+  const news = await trackQueryTime(() => News.find(), "News.find");
+  logger.info("Fetched news from database");
+  return new ApiResponse(statusCode.OK, news, "News fetched successfully");
+};
+
+
+//Update Blog Services
+export const updateBlogServices = async (blogData) => {
+  try {
+    const { _id ,id, title, content } = blogData;
+    if (!id) {
+      throw new apiError(statusCode.BAD_REQUEST, "Blog ID is required");
+    }
+
+    logger.info(`Updating blog with ID: ${id}`);
+
+    const updatedBlog = await Blog.findByIdAndUpdate(_id, blogData, { new: true, runValidators: true });
+
+    if (!updatedBlog) {
+      throw new apiError(statusCode.NOT_FOUND, "Blog not found");
+    }
+
+    logger.info(`Blog updated successfully: ${id}`);
+    return new ApiResponse(statusCode.OK, updatedBlog, "Blog updated successfully");
+  } catch (error) {
+    logger.error(`Error updating blog: ${error.message}`);
+    throw error;
+  }
+};
+
+
+export const deleteBlogServices = async (blogId) => {
+  logger.info(`Deleting blog with ID: ${blogId}`);
+  
+  const deletedBlog = await trackQueryTime(
+    () => Blog.findByIdAndDelete(blogId),
+    "Blog.findByIdAndDelete",
+    { blogId }
   );
-  logger.info("Fetched news");
-  return new ApiResponse(statusCode.OK, JSON.parse(news), "News fetched successfully");
+
+  if (!deletedBlog) {
+    logger.warn(`Blog not found: ${blogId}`);
+    throw new apiError(statusCode.NOT_FOUND, "Blog not found");
+  }
+
+  logger.info(`Blog deleted successfully: ${blogId}`);
+  return new ApiResponse(statusCode.OK, deletedBlog, "Blog deleted successfully");
 };

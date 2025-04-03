@@ -1,5 +1,5 @@
 import express from "express";
-import { createModule, createRole, deleteModule, deleteRole, getModules, getRoleByID, getRoles, updateModule, updatePermission, updateRole, getBlog, getNews, createRoleTest } from "../controllers/moduleController.js";
+import { createModule, createRole, deleteModule, deleteRole, getModules, getRoleByID, getRoles, updateModule, updatePermission, updateRole, getBlog, getNews, createRoleTest, updateBlog, deleteBlog } from "../controllers/moduleController.js";
 import { apiLimiter } from "../middlewares/rateLimiter.js";
 import { verifyAdmin, verifyJWT, verifyLevel, verifyPermission } from "../middlewares/auth.js";
 
@@ -20,5 +20,7 @@ router.put("/role/permission", verifyJWT, verifyPermission, updatePermission);
 router.post("/rolebyid", verifyJWT, getRoleByID);
 router.post("/blog", getBlog);
 router.post("/news", getNews);
+router.put("/blog", updateBlog); // Update a blog
+router.delete("/blog", deleteBlog); // Delete a blog
 export default router;
 

@@ -1,6 +1,6 @@
 
 import { createModuleSchema, createRoleSchema, deleteModuleSchema, roleIdSchema, updateModuleSchema, updateRoleSchema } from "../validation/moduleValidation.js";
-import { createModuleService, createRoleService, deleteModuleService, deleteRoleService, getModulesService, getRoleByIdService, getRolesService, updateModuleService, updatePermissionService, updateRoleService, getBlogServices, getNewsServices, createRoleServiceTest  } from "../services/module.js";
+import { createModuleService, createRoleService, deleteModuleService, deleteRoleService, getModulesService, getRoleByIdService, getRolesService, updateModuleService, updatePermissionService, updateRoleService, getBlogServices, getNewsServices, createRoleServiceTest, updateBlogServices, deleteBlogServices  } from "../services/module.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { statusCode } from "../config/config.js";
@@ -98,6 +98,31 @@ export const getBlog = asyncHandler(async (req, res) => {
   const blog = await getBlogServices();
   res.status(blog.statusCode).json(blog);
 });
+//update blog
+export const updateBlog = async (req, res, next) => {
+  try {
+    const blogData = req.body;
+
+    const response = await updateBlogServices(blogData);
+    console.log("res",response);
+    
+    res.status(response.statusCode).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+//delete blog
+export const deleteBlog = async (req, res, next) => {
+  try {
+    const { _id } = req.body;
+
+    const response = await deleteBlogServices(_id);
+    res.status(response.statusCode).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
 
 //get news
 export const getNews = asyncHandler(async (req,res)=>{
