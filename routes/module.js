@@ -18,11 +18,11 @@ router.post("/getRole",verifyJWT, getRoles);
 router.put("/updateRole", verifyJWT, verifyPermission, updateRole);
 router.put("/role/permission", verifyJWT, verifyPermission, updatePermission);
 router.post("/rolebyid", verifyJWT, getRoleByID);
-router.get("/blog",verifyJWT, verifyPermission, getBlog);
+router.get("/blog",verifyJWT, getBlog);
 router.post("/blog",verifyJWT, verifyPermission, addBlog);
 router.patch("/blog", verifyJWT, verifyPermission, updateBlog);
 router.delete("/blog",verifyJWT, verifyPermission, deleteBlog); // Delete a blog
-router.get("/news",verifyJWT, verifyPermission, getNews);
+router.get("/news",verifyJWT, getNews);
 router.post("/news", verifyJWT, verifyPermission, addNews);
 router.patch("/news", verifyJWT, verifyPermission, updateNews); // Changed from PUT to PATCH
 router.delete("/news", verifyJWT, verifyPermission, deleteNews);
