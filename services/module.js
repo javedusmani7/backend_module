@@ -110,6 +110,9 @@ export const createRoleService = async (req) => {
 
   const formattedPermissions = await Promise.all(
     permissions.map(async ({ moduleId, permission }) => {
+      if (permission.write || permission.delete || permission.update) {
+        permission.read = true;
+      }
       const permissionData = await trackQueryTime(
         () => new Permission(permission).save(),
         "Permission.save",
@@ -302,6 +305,9 @@ export const updatePermissionService = async ({ _id, permission }) => {
 
   const formattedPermissions = await Promise.all(
     permission.map(async ({ moduleId, permission }) => {
+      if (permission.write || permission.delete || permission.update) {
+        permission.read = true;
+      }
       let permissionData = permission._id
         ? await trackQueryTime(() => Permission.findByIdAndUpdate(permission._id, permission, { new: true }), "Permission.findByIdAndUpdate", { permissionId: permission._id })
         : await trackQueryTime(() => new Permission(permission).save(), "Permission.save", { moduleId });
