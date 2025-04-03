@@ -345,6 +345,27 @@ export const getNewsServices = async () => {
 };
 
 
+export const addBlogServices = async (blogData) => {
+  try {
+    const { title, content } = blogData;
+
+    logger.info("Creating a new blog entry");
+
+    const newBlog = await trackQueryTime(
+      () => Blog.create({ title, content }),
+      "Blog.create"
+    );
+
+    logger.info(`Blog created successfully with ID: ${newBlog._id}`);
+    return new ApiResponse(statusCode.CREATED, newBlog, "Blog created successfully");
+  } catch (error) {
+    logger.error(`Error creating blog: ${error.message}`);
+    throw error;
+  }
+};
+
+
+
 //Update Blog Services
 export const updateBlogServices = async (blogData) => {
   try {
