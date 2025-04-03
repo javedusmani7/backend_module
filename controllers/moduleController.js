@@ -1,10 +1,11 @@
 
 import { createModuleSchema, createRoleSchema, deleteModuleSchema, roleIdSchema, updateModuleSchema, updateRoleSchema } from "../validation/moduleValidation.js";
-import { createModuleService, createRoleService, deleteModuleService, deleteRoleService, getModulesService, getRoleByIdService, getRolesService, updateModuleService, updatePermissionService, updateRoleService, getBlogServices, getNewsServices, createRoleServiceTest, updateBlogServices, deleteBlogServices, addBlogServices  } from "../services/module.js";
+import { createModuleService, createRoleService, deleteModuleService, deleteRoleService, getModulesService, getRoleByIdService, getRolesService, updateModuleService, updatePermissionService, updateRoleService, getBlogServices, getNewsServices, createRoleServiceTest, updateBlogServices, deleteBlogServices, addBlogServices, updateNewsServices, deleteNewsServices, addNewsServices  } from "../services/module.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { statusCode } from "../config/config.js";
 import { blogSchema, deleteBlogSchema, updateBlogSchema } from "../validation/blogValidation.js";
+import { deleteNewsSchema, newsSchema, updateNewsSchema } from "../validation/newsValidation.js";
 
 
 export const createModule = asyncHandler(async (req, res) => {
@@ -121,15 +122,16 @@ export const addBlog = async (req, res, next) => {
 //update blog
 export const updateBlog = async (req, res, next) => {
   try {
+    // Validate request body
     const { error } = updateBlogSchema.validate(req.body);
     if (error) {
       throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
     }
-    const blogData = req.body;
 
+    const blogData = req.body;
     const response = await updateBlogServices(blogData);
-    console.log("res",response);
-    
+
+    console.log("res", response);
     res.status(response.statusCode).json(response);
   } catch (error) {
     next(error);
@@ -152,8 +154,59 @@ export const deleteBlog = async (req, res, next) => {
   }
 };
 
-//get news
-export const getNews = asyncHandler(async (req,res)=>{
+// Get all news
+export const getNews = asyncHandler(async (req, res) => {
   const news = await getNewsServices();
   res.status(news.statusCode).json(news);
 });
+
+// Add news
+export const addNews = async (req, res, next) => {
+  try {
+    const { error } = newsSchema.validate(req.body);
+    if (error) {
+      throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
+    }
+
+    const newsData = req.body;
+    const response = await addNewsServices(newsData);
+
+    res.status(response.statusCode).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Update news
+export const updateNews = async (req, res, next) => {
+  try {
+    const { error } = updateNewsSchema.validate(req.body);
+    if (error) {
+      throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
+    }
+
+    const newsData = req.body;
+    const response = await updateNewsServices(newsData);
+
+    res.status(response.statusCode).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Delete news
+export const deleteNews = async (req, res, next) => {
+  try {
+    const { error } = deleteNewsSchema.validate(req.body);
+    if (error) {
+      throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
+    }
+
+    const { _id } = req.body;
+    const response = await deleteNewsServices(_id);
+
+    res.status(response.statusCode).json(response);
+  } catch (error) {
+    next(error);
+  }
+};

@@ -41,10 +41,14 @@ export const verifyPermission = asyncHandler(async (req, res, next) => {
   }
   const roleData = await Role.findById(role).select("permissions -_id"); 
   const index = roleData.permissions.findIndex(item => item.moduleId.equals(module_id._id)); 
+  // console.log("index", index);
+  
   if (index == -1) {
     throw new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation");
   } 
   const permission = await Permission.findById(roleData.permissions[index].permission)
+  // console.log("permission", permission[operation]);
+  
   if (!permission[operation]) {
     throw new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation");
   }

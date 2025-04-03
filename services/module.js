@@ -361,11 +361,16 @@ export const addBlogServices = async (blogData) => {
 //Update Blog Services
 export const updateBlogServices = async (blogData) => {
   try {
-    const { _id , title, content } = blogData;
+    const { _id, ...updateFields } = blogData;
 
     logger.info(`Updating blog with ID: ${_id}`);
 
-    const updatedBlog = await Blog.findByIdAndUpdate(_id, blogData, { new: true, runValidators: true });
+    // Use `findByIdAndUpdate` with `$set` to allow partial updates
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      _id,
+      { $set: updateFields }, 
+      { new: true, runValidators: true }
+    );
 
     if (!updatedBlog) {
       throw new apiError(statusCode.NOT_FOUND, "Blog not found");
@@ -378,6 +383,7 @@ export const updateBlogServices = async (blogData) => {
     throw error;
   }
 };
+
 
 
 export const deleteBlogServices = async (blogId) => {
@@ -407,3 +413,64 @@ export const getNewsServices = async () => {
   return new ApiResponse(statusCode.OK, news, "News fetched successfully");
 };
 
+// Add news
+export const addNewsServices = async (newsData) => {
+  try {
+    const { title, content } = newsData;
+    logger.info("Creating a new news entry");
+
+    const newNews = await trackQueryTime(
+      () => News.create({ title, content }),
+      "News.create"
+    );
+
+    logger.info(`News created successfully with ID: ${newNews._id}`);
+    return new ApiResponse(statusCode.CREATED, newNews, "News created successfully");
+  } catch (error) {
+    logger.error(`Error creating news: ${error.message}`);
+    throw error;
+  }
+};
+
+// Update news
+export const updateNewsServices = async (newsData) => {
+  try {
+    const { _id, ...updateFields } = newsData;
+    logger.info(`Updating news with ID: ${_id}`);
+
+    const updatedNews = await News.findByIdAndUpdate(
+      _id,
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedNews) {
+      throw new apiError(statusCode.NOT_FOUND, "News not found");
+    }
+
+    logger.info(`News updated successfully: ${_id}`);
+    return new ApiResponse(statusCode.OK, updatedNews, "News updated successfully");
+  } catch (error) {
+    logger.error(`Error updating news: ${error.message}`);
+    throw error;
+  }
+};
+
+// Delete news
+export const deleteNewsServices = async (newsId) => {
+  logger.info(`Deleting news with ID: ${newsId}`);
+
+  const deletedNews = await trackQueryTime(
+    () => News.findByIdAndDelete(newsId),
+    "News.findByIdAndDelete",
+    { newsId }
+  );
+
+  if (!deletedNews) {
+    logger.warn(`News not found: ${newsId}`);
+    throw new apiError(statusCode.NOT_FOUND, "News not found");
+  }
+
+  logger.info(`News deleted successfully: ${newsId}`);
+  return new ApiResponse(statusCode.OK, deletedNews, "News deleted successfully");
+};
