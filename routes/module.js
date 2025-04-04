@@ -1,5 +1,5 @@
 import express from "express";
-import { createModule, createRole, deleteModule, deleteRole, getModules, getRoleByID, getRoles, updateModule, updatePermission, updateRole, getBlog, getNews, createRoleTest, updateBlog, deleteBlog, addBlog, addNews, updateNews, deleteNews } from "../controllers/moduleController.js";
+import { createModule, createRole, deleteModule, deleteRole, getModules, getRoleByID, getRoles, updateModule, updatePermission, updateRole, getBlog, getNews, createRoleTest, updateBlog, deleteBlog, addBlog, addNews, updateNews, deleteNews, getLoginRole } from "../controllers/moduleController.js";
 import { apiLimiter } from "../middlewares/rateLimiter.js";
 import { verifyAdmin, verifyJWT, verifyLevel, verifyPermission } from "../middlewares/auth.js";
 
@@ -26,6 +26,7 @@ router.get("/news",verifyJWT, getNews);
 router.post("/news", verifyJWT, verifyPermission, addNews);
 router.patch("/news", verifyJWT, verifyPermission, updateNews); // Changed from PUT to PATCH
 router.delete("/news", verifyJWT, verifyPermission, deleteNews);
+router.get("/getloginrole", verifyJWT, getLoginRole)
 
 export default router;
 

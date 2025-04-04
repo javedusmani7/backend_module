@@ -95,6 +95,11 @@ export const getRoleByID = asyncHandler(async (req, res) => {
   res.status(result.statusCode).json(result);
 })
 
+export const getLoginRole = asyncHandler(async (req, res) => {
+  const result = await getRoleByIdService(req.user.role);
+  res.status(result.statusCode).json(result);
+})
+
 //get blog 
 export const getBlog = asyncHandler(async (req, res) => {
   const blog = await getBlogServices();
