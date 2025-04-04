@@ -159,16 +159,16 @@ export const addUserService = async (req) => {
     password: hashedPassword,
     role: role?._id,
     userId: userId || null,
-    emailVerified: emailVerified || false,
+    emailVerified: emailVerified || true,
     ipv4: ipv4 || null,
-    ipv4Verified: ipv4Verified || false,
+    ipv4Verified: ipv4Verified || true,
     ipv6: ipv6 || null,
-    ipv6Verified: ipv6Verified || false,
+    ipv6Verified: ipv6Verified || true,
     deviceId: deviceId || null,
-    deviceIdVerified: deviceIdVerified || false,
+    deviceIdVerified: deviceIdVerified || true,
     mobileNumber: mobileNumber || null,
-    mobileVerified: mobileVerified || false,
-    multiLogin: multiLogin || false,
+    mobileVerified: mobileVerified || true,
+    multiLogin: multiLogin || true,
   });
 
   await trackQueryTime(() => newUser.save(), "User.save", { email });
