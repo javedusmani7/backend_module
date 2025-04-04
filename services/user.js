@@ -130,3 +130,49 @@ export const updateUserService = async (req) => {
   }).select('-password');
   return new ApiResponse(statusCode.CREATED, updatedUser, "User updated successfully");
 };
+
+//New User Service
+export const addUserService = async (req) => {
+  const { name, email, password, userId, emailVerified, ipv4, ipv4Verified, ipv6, ipv6Verified, deviceId, deviceIdVerified, mobileNumber, mobileVerified, multiLogin , role: roleId } = req.body;
+
+  logger.info(`Adding new user: ${email}`);
+  if (!roleId) {
+    throw new apiError(statusCode.BAD_REQUEST, "Role is required");
+  }
+
+  const role = await trackQueryTime(() => Role.findById(roleId), "Role.findById", { roleId });
+  if (!role) {
+    logger.warn(`USER role not found for email: ${email}`);
+    throw new apiError(statusCode.NOT_FOUND, "USER role does not exist");
+  }
+
+  const existingUser = await trackQueryTime(() => User.findOne({ email }), "User.findOne", { email });
+  if (existingUser) {
+    logger.warn(`User already exists: ${email}`);
+    throw new apiError(statusCode.ALREADY_EXISTS, "User already exists", existingUser);
+  }
+
+  const hashedPassword = await encryptPassword(password);
+  const newUser = new User({
+    name,
+    email,
+    password: hashedPassword,
+    role: role?._id,
+    userId: userId || null,
+    emailVerified: emailVerified || false,
+    ipv4: ipv4 || null,
+    ipv4Verified: ipv4Verified || false,
+    ipv6: ipv6 || null,
+    ipv6Verified: ipv6Verified || false,
+    deviceId: deviceId || null,
+    deviceIdVerified: deviceIdVerified || false,
+    mobileNumber: mobileNumber || null,
+    mobileVerified: mobileVerified || false,
+    multiLogin: multiLogin || false,
+  });
+
+  await trackQueryTime(() => newUser.save(), "User.save", { email });
+
+  logger.info(`User added successfully: ${email}`);
+  return new ApiResponse(statusCode.CREATED, newUser, "User added successfully");
+};
