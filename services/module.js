@@ -110,6 +110,9 @@ export const createRoleService = async (req) => {
 
   const formattedPermissions = await Promise.all(
     permissions.map(async ({ moduleId, permission }) => {
+      if (permission.write || permission.delete || permission.update) {
+        permission.read = true;
+      }
       const permissionData = await trackQueryTime(
         () => new Permission(permission).save(),
         "Permission.save",
@@ -302,6 +305,9 @@ export const updatePermissionService = async ({ _id, permission }) => {
 
   const formattedPermissions = await Promise.all(
     permission.map(async ({ moduleId, permission }) => {
+      if (permission.write || permission.delete || permission.update) {
+        permission.read = true;
+      }
       let permissionData = permission._id
         ? await trackQueryTime(() => Permission.findByIdAndUpdate(permission._id, permission, { new: true }), "Permission.findByIdAndUpdate", { permissionId: permission._id })
         : await trackQueryTime(() => new Permission(permission).save(), "Permission.save", { moduleId });
@@ -328,17 +334,7 @@ export const getRoleByIdService = async (roleId) => {
 
 
 // Blog Services
-const blogFilePath = path.join(process.cwd(), "data/blogs.json");
-// export const getBlogServices = async () => {
-//   logger.info("Fetching blog");
-//   const blog = await trackQueryTime(
-//     () => fs.readFileSync(blogFilePath, "utf8"),
-//     "fs.readFileSync",
-//     { filePath: blogFilePath }
-//   );
-//   logger.info("Fetched blog");
-//   return new ApiResponse(statusCode.OK, JSON.parse(blog), "Blog fetched successfully");
-// };
+
 export const getBlogServices = async () => {
   logger.info("Fetching blogs from database");
   const blogs = await trackQueryTime(() => Blog.find(), "Blog.find");
@@ -346,49 +342,54 @@ export const getBlogServices = async () => {
   return new ApiResponse(statusCode.OK, blogs, "Blogs fetched successfully");
 };
 
-// News Services
-const newsFilePath = path.join(process.cwd(), "data/news.json");
-// export const getNewsServices = async () => {
-//   logger.info("Fetching news");
-//   const news = await trackQueryTime(
-//     () => fs.readFileSync(newsFilePath, "utf8"),
-//     "fs.readFileSync",
-//     { filePath: newsFilePath }
-//   );
-//   logger.info("Fetched news");
-//   return new ApiResponse(statusCode.OK, JSON.parse(news), "News fetched successfully");
-// };
-export const getNewsServices = async () => {
-  logger.info("Fetching news from database");
-  const news = await trackQueryTime(() => News.find(), "News.find");
-  logger.info("Fetched news from database");
-  return new ApiResponse(statusCode.OK, news, "News fetched successfully");
+
+export const addBlogServices = async (blogData) => {
+  try {
+    const { title, content } = blogData;
+
+    logger.info("Creating a new blog entry");
+
+    const newBlog = await trackQueryTime(
+      () => Blog.create({ title, content }),
+      "Blog.create"
+    );
+
+    logger.info(`Blog created successfully with ID: ${newBlog._id}`);
+    return new ApiResponse(statusCode.CREATED, newBlog, "Blog created successfully");
+  } catch (error) {
+    logger.error(`Error creating blog: ${error.message}`);
+    throw error;
+  }
 };
+
 
 
 //Update Blog Services
 export const updateBlogServices = async (blogData) => {
   try {
-    const { _id ,id, title, content } = blogData;
-    if (!id) {
-      throw new apiError(statusCode.BAD_REQUEST, "Blog ID is required");
-    }
+    const { _id, ...updateFields } = blogData;
 
-    logger.info(`Updating blog with ID: ${id}`);
+    logger.info(`Updating blog with ID: ${_id}`);
 
-    const updatedBlog = await Blog.findByIdAndUpdate(_id, blogData, { new: true, runValidators: true });
+    // Use `findByIdAndUpdate` with `$set` to allow partial updates
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      _id,
+      { $set: updateFields }, 
+      { new: true, runValidators: true }
+    );
 
     if (!updatedBlog) {
       throw new apiError(statusCode.NOT_FOUND, "Blog not found");
     }
 
-    logger.info(`Blog updated successfully: ${id}`);
+    logger.info(`Blog updated successfully: ${_id}`);
     return new ApiResponse(statusCode.OK, updatedBlog, "Blog updated successfully");
   } catch (error) {
     logger.error(`Error updating blog: ${error.message}`);
     throw error;
   }
 };
+
 
 
 export const deleteBlogServices = async (blogId) => {
@@ -407,4 +408,75 @@ export const deleteBlogServices = async (blogId) => {
 
   logger.info(`Blog deleted successfully: ${blogId}`);
   return new ApiResponse(statusCode.OK, deletedBlog, "Blog deleted successfully");
+};
+
+// News Services
+
+export const getNewsServices = async () => {
+  logger.info("Fetching news from database");
+  const news = await trackQueryTime(() => News.find(), "News.find");
+  logger.info("Fetched news from database");
+  return new ApiResponse(statusCode.OK, news, "News fetched successfully");
+};
+
+// Add news
+export const addNewsServices = async (newsData) => {
+  try {
+    const { title, content } = newsData;
+    logger.info("Creating a new news entry");
+
+    const newNews = await trackQueryTime(
+      () => News.create({ title, content }),
+      "News.create"
+    );
+
+    logger.info(`News created successfully with ID: ${newNews._id}`);
+    return new ApiResponse(statusCode.CREATED, newNews, "News created successfully");
+  } catch (error) {
+    logger.error(`Error creating news: ${error.message}`);
+    throw error;
+  }
+};
+
+// Update news
+export const updateNewsServices = async (newsData) => {
+  try {
+    const { _id, ...updateFields } = newsData;
+    logger.info(`Updating news with ID: ${_id}`);
+
+    const updatedNews = await News.findByIdAndUpdate(
+      _id,
+      { $set: updateFields },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedNews) {
+      throw new apiError(statusCode.NOT_FOUND, "News not found");
+    }
+
+    logger.info(`News updated successfully: ${_id}`);
+    return new ApiResponse(statusCode.OK, updatedNews, "News updated successfully");
+  } catch (error) {
+    logger.error(`Error updating news: ${error.message}`);
+    throw error;
+  }
+};
+
+// Delete news
+export const deleteNewsServices = async (newsId) => {
+  logger.info(`Deleting news with ID: ${newsId}`);
+
+  const deletedNews = await trackQueryTime(
+    () => News.findByIdAndDelete(newsId),
+    "News.findByIdAndDelete",
+    { newsId }
+  );
+
+  if (!deletedNews) {
+    logger.warn(`News not found: ${newsId}`);
+    throw new apiError(statusCode.NOT_FOUND, "News not found");
+  }
+
+  logger.info(`News deleted successfully: ${newsId}`);
+  return new ApiResponse(statusCode.OK, deletedNews, "News deleted successfully");
 };
