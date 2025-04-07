@@ -1,6 +1,6 @@
 
 import { createModuleSchema, createRoleSchema, deleteModuleSchema, roleIdSchema, updateModuleSchema, updateRoleSchema } from "../validation/moduleValidation.js";
-import { createModuleService, createRoleService, deleteModuleService, deleteRoleService, getModulesService, getRoleByIdService, getRolesService, updateModuleService, updatePermissionService, updateRoleService, getBlogServices, getNewsServices, createRoleServiceTest, updateBlogServices, deleteBlogServices, addBlogServices, updateNewsServices, deleteNewsServices, addNewsServices  } from "../services/module.js";
+import { createModuleService, createRoleService, deleteModuleService, deleteRoleService, getModulesService, getRoleByIdService, getRolesService, updateModuleService, updatePermissionService, updateRoleService, getBlogServices, getNewsServices, createRoleServiceTest, updateBlogServices, deleteBlogServices, addBlogServices, updateNewsServices, deleteNewsServices, addNewsServices, getAllRolesService  } from "../services/module.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { statusCode } from "../config/config.js";
@@ -69,6 +69,11 @@ export const deleteRole = asyncHandler(async (req, res) => {
 
 export const getRoles = asyncHandler(async (req, res) => {
   const result = await getRolesService(req);
+  res.status(result.statusCode).json(result);
+});
+
+export const getAllRoles = asyncHandler(async (req, res) => {
+  const result = await getAllRolesService(req);
   res.status(result.statusCode).json(result);
 });
 

@@ -1,5 +1,5 @@
 import express from "express";
-import { createModule, createRole, deleteModule, deleteRole, getModules, getRoleByID, getRoles, updateModule, updatePermission, updateRole, getBlog, getNews, createRoleTest, updateBlog, deleteBlog, addBlog, addNews, updateNews, deleteNews, getLoginRole } from "../controllers/moduleController.js";
+import { createModule, createRole, deleteModule, deleteRole, getModules, getRoleByID, getRoles, updateModule, updatePermission, updateRole, getBlog, getNews, createRoleTest, updateBlog, deleteBlog, addBlog, addNews, updateNews, deleteNews, getLoginRole, getAllRoles } from "../controllers/moduleController.js";
 import { apiLimiter } from "../middlewares/rateLimiter.js";
 import { verifyAdmin, verifyJWT, verifyLevel, verifyPermission } from "../middlewares/auth.js";
 
@@ -13,9 +13,10 @@ router.delete("/module", verifyJWT, verifyPermission, deleteModule);
 router.post("/getModule", verifyJWT, getModules);
 router.post("/createRole",verifyJWT, verifyLevel, createRole);
 router.post("/createRoleTest", createRoleTest);
-router.post("/deleteRole", verifyJWT, verifyPermission, deleteRole);
+router.post("/deleteRole", verifyJWT, verifyPermission,verifyLevel, deleteRole);
 router.post("/getRole",verifyJWT, getRoles);
-router.put("/updateRole", verifyJWT, verifyPermission, updateRole);
+router.get("/getAllRoles", verifyJWT, getAllRoles);
+router.put("/updateRole", verifyJWT, verifyPermission, verifyLevel, updateRole);
 router.put("/role/permission", verifyJWT, verifyPermission, updatePermission);
 router.post("/rolebyid", verifyJWT, getRoleByID);
 router.get("/blog",verifyJWT, getBlog);
