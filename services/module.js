@@ -319,11 +319,34 @@ export const getRolesService = async (req, res) => {
 };
 
 
-export const getAllRolesService = async () => {
-  const roles = await Role.find({isDeleted: false})
-    .populate("permissions.moduleId")
-    .populate("permissions.permission")
-    .populate("levelId");
+export const getAllRolesService = async (req) => {
+  const { role } = req.user;
+  const userRoleData = await trackQueryTime(
+    () => Role.findById(role).populate("levelId"),
+    "Role.findById",
+    { role }
+  );
+  console.log("Role data", userRoleData.levelId.levelId);
+
+  const levelData = await trackQueryTime(
+    () => Level.find({ levelId: { $gt: userRoleData.levelId.levelId } }).select("_id"),
+    "Level.find",
+    { levelId: userRoleData.levelId.levelId }
+  );
+
+  const levelIds = levelData.map((level) => level._id);
+  logger.info("Fetching all roles");
+
+  const roles = await trackQueryTime(
+    () => Role.find({ levelId: { $in: levelIds },   isDeleted: false, })
+      .populate("permissions.moduleId")
+      .populate("permissions.permission")
+      .populate("levelId"),
+    "Role.find",
+    { levelIds }
+  );
+
+  logger.info(`Fetched ${roles.length} roles`);
   return new ApiResponse(statusCode.OK, roles, "Roles fetched successfully");
 };
 
