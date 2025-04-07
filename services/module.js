@@ -177,7 +177,7 @@ export const createRoleService = async (req) => {
 
   const existingLevel = await Role.find({ levelId });
   console.log("existingLevel", existingLevel.length);
-  
+
   if (existingLevel.length) {
     throw new apiError(statusCode.ALREADY_EXISTS, "Role already exists for the given leven", existingLevel);
   }
@@ -315,7 +315,25 @@ export const getRolesService = async (req, res) => {
     .populate("permissions.permission")
     .populate("levelId");
 
-  return new ApiResponse(statusCode.OK, roleData, "Roles fetched successfully");
+  const obj = roleData[0].permissions.map((permission) => {
+    let obj = permission.permission.toObject();
+    for (let key in obj) {
+      if (typeof obj[key] === "boolean" && obj[key] === false) {
+        delete obj[key];
+      }
+    }
+    return {
+      moduleId: permission.moduleId,
+      permission: obj,
+    };
+  });
+
+  let roleData1 = roleData.map((role) => {
+    return { ...(role).toObject(), permissions: obj }
+  })
+
+  return new ApiResponse(statusCode.OK, roleData1, "Roles fetched successfully");;
+
 };
 
 
