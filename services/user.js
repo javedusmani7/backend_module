@@ -6,7 +6,7 @@ import { apiError } from "../utils/apiError.js";
 import { encryptPassword, comparePassword } from "../middlewares/encryption.js";
 import User from "../models/User.js";
 import Role from "../models/Role.js";
-import logger, { trackQueryTime } from "../logger.js";
+import logger, { trackQueryTime } from "../utils/logger.js";
 
 // Register Service
 export const registerService = async (req) => {

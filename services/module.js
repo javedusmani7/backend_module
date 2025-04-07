@@ -3,7 +3,7 @@ import { statusCode } from "../config/config.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import Permission from "../models/Permission.js";
 import Role from "../models/Role.js";
-import logger, { trackQueryTime } from "../logger.js";
+import logger, { trackQueryTime } from "../utils/logger.js";
 import fs from "fs";
 import path from "path";
 import Level from "../models/Level.js";

@@ -6,9 +6,10 @@ import { corsOptions } from './config/config.js';
 import { connectDB } from './config/db.js';
 import userRoutes from "./routes/user.js";
 import levelRoutes from "./routes/level.js";
+import loggerRoutes from "./routes/loggerRoutes.js";
 import { errorHandler } from './utils/asyncHandler.js';
 import responseEncrypt from './middlewares/responseEncrypt.js';
-import logger, { requestLogger, responseLogger } from "./logger.js"; 
+import logger, { requestLogger, responseLogger } from "./utils/logger.js"; 
 
 dotenv.config(); 
 
@@ -26,6 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 // API Routes
 app.use("/api/users", userRoutes);
 app.use("/api/level", levelRoutes);
+app.use("/api/logger", loggerRoutes);
 
 // Response Logger (should be after routes)
 app.use(responseLogger);

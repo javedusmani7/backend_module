@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import logger from "../logger.js"
+import logger from "./logger.js"
 
 const asyncHandler = (requestHandler) => {
     return (req, res, next) => {
