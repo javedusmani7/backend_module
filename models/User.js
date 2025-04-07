@@ -21,6 +21,7 @@ const UserSchema = new mongoose.Schema(
     mobileNumber: { type: String },
     mobileVerified: { type: Boolean, default: true },
     multiLogin: { type: Boolean, default: true },
+    isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

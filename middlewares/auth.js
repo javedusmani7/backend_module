@@ -8,6 +8,7 @@ import Module from "../models/Module.js";
 import Permission from "../models/Permission.js";
 import { getRoleByIdService } from "../services/module.js";
 import { getLevelByIdService } from "../services/level.js";
+import { log } from "console";
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
   const token = req.cookies?.authToken;
@@ -31,6 +32,11 @@ export const verifyPermission = asyncHandler(async (req, res, next) => {
   if (req.body.operation) {
     delete req.body.operation;
   }  
+  console.log("req.body", req.body);
+  console.log("operation", operation);
+  console.log("module", module);
+  
+  
   if (req.body.module) {
     delete req.body.module;
   }    
@@ -61,7 +67,6 @@ export const verifyLevel = asyncHandler(async (req, res, next) => {
   const roleData = await getRoleByIdService(role);
   let levelData;  
   if (req.body?.levelId) {
-
    levelData = await getLevelByIdService(req.body.levelId);   
    levelData = levelData.data;
   }
@@ -72,9 +77,9 @@ export const verifyLevel = asyncHandler(async (req, res, next) => {
   }  
   const userLevel = roleData.data.levelId.levelId;
   const roleLevel = levelData.levelId;
+  
 
-
- if (userLevel != (roleLevel - 1)) {
+ if (userLevel != (roleLevel - 1)) { 
     throw new apiError(statusCode.LACK_PERMISSION, "You don't have permission for the operation");
   }
   

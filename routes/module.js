@@ -9,11 +9,11 @@ router.use(apiLimiter);
 
 router.post("/module", verifyJWT, createModule);
 router.put("/module", verifyJWT, verifyPermission, updateModule);
-router.delete("/module", verifyJWT, verifyPermission, deleteModule);
+router.delete("/module", verifyJWT, deleteModule);
 router.post("/getModule", verifyJWT, getModules);
 router.post("/createRole",verifyJWT, verifyLevel, createRole);
 router.post("/createRoleTest", createRoleTest);
-router.post("/deleteRole", verifyJWT, verifyPermission, verifyLevel, deleteRole);
+router.post("/deleteRole", verifyJWT, deleteRole);
 router.post("/getRole",verifyJWT, getRoles);
 router.get("/getAllRoles", verifyJWT, getAllRoles);
 router.put("/updateRole", verifyJWT, verifyPermission, verifyLevel, updateRole);

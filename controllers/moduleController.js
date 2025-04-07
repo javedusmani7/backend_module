@@ -13,15 +13,20 @@ export const createModule = asyncHandler(async (req, res) => {
   if (error) {
     throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
   }
-  const result = await createModuleService(req.body);
+  const userId = req.user?._id;
+  const result = await createModuleService(req.body , userId);
   res.status(result.statusCode).json(result);
 });
 
 export const deleteModule = asyncHandler(async (req, res) => {
+
+  
   const { error } = deleteModuleSchema.validate(req.body);
   if (error) {
     throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
   }
+  console.log("req.body", req.body);
+  
   const result = await deleteModuleService(req.body);
   res.status(result.statusCode).json(result);
 });
@@ -41,10 +46,13 @@ export const getModules = asyncHandler(async (req, res) => {
 });
 
 export const createRole = asyncHandler(async (req, res) => {
+  console.log("reqssss.body", req);
   const { error } = createRoleSchema.validate(req.body);
   if (error) {
     throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
   }
+  
+  
   const result = await createRoleService(req);
   res.status(result.statusCode).json(result);
 });

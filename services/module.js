@@ -14,27 +14,35 @@ import { log } from "console";
 
 
 // Module Services
-export const createModuleService = async (req) => {
+export const createModuleService = async (req , createdBy) => {
   logger.info(`Creating module with data: ${JSON.stringify(req)}`);
+  const moduleData = { ...req, createdBy };
   const module = await trackQueryTime(
-    () => new Module(req).save(),
+    () => new Module(moduleData).save(),
     "Module.save",
-    { data: req }
+    { data: moduleData }
   );
   logger.info(`Module created successfully: ${module._id}`);
   return new ApiResponse(statusCode.CREATED, module, "Module created successfully");
 };
 
 export const deleteModuleService = async ({ moduleId }) => {
-  logger.info(`Deleting module with ID: ${moduleId}`);
+  logger.info(`Soft deleting module with ID: ${moduleId}`);
+
   const module = await trackQueryTime(
-    () => Module.findByIdAndDelete(moduleId),
-    "Module.findByIdAndDelete",
+    () =>
+      Module.findByIdAndUpdate(
+        moduleId,
+        { isDeleted: true },
+        { new: true } 
+      ),
+    "Module.findByIdAndUpdate",
     { moduleId }
   );
-  logger.info(`Module deleted: ${moduleId}`);
-  return new ApiResponse(statusCode.OK, module, "Module deleted successfully");
+  logger.info(`Module soft deleted: ${moduleId}`);
+  return new ApiResponse(statusCode.OK, module, "Module soft deleted successfully");
 };
+
 
 export const updateModuleService = async ({ moduleId, moduleData }) => {
   logger.info(`Updating module ID: ${moduleId}`);
@@ -50,7 +58,7 @@ export const updateModuleService = async ({ moduleId, moduleData }) => {
 export const getModulesService = async () => {
   logger.info("Fetching all modules");
   const modules = await trackQueryTime(
-    () => Module.find({}),
+    () =>Module.find({isDeleted: false}),
     "Module.find"
   );
   logger.info(`Fetched ${modules.length} modules`);
@@ -292,17 +300,24 @@ export const getRolesService = async (req, res) => {
       select: "levelId -_id",
     })
     .select("levelId -_id");
+
   const userLevelId = userData.levelId.levelId;
 
   const levelData = await Level.find({ levelId: userLevelId + 1 }).select("_id");
-  const roleData = await Role.find({ levelId: levelData[0]._id })
+  console.log("levelData", levelData);
+  
+
+  const roleData = await Role.find({ 
+      levelId: levelData[0]._id,
+      isDeleted: false
+    })
     .populate("permissions.moduleId")
     .populate("permissions.permission")
     .populate("levelId");
 
-  return new ApiResponse(statusCode.OK, roleData, "Roles fetched successfully");;
-
+  return new ApiResponse(statusCode.OK, roleData, "Roles fetched successfully");
 };
+
 
 export const getAllRolesService = async () => {
   const roles = await Role.find()
@@ -360,7 +375,13 @@ export const updateRoleService = async (req) => {
 
 export const deleteRoleService = async (roleId) => {
   logger.info(`Deleting role ID: ${roleId}`);
-  const role = await trackQueryTime(() => Role.findById(roleId), "Role.findById", { roleId });
+
+  const role = await trackQueryTime(
+    () => Role.findById(roleId),
+    "Role.findById",
+    { roleId }
+  );
+
   if (!role) {
     logger.warn(`Role not found: ${roleId}`);
     throw new apiError(statusCode.NOT_FOUND, "Role not found");
@@ -371,21 +392,37 @@ export const deleteRoleService = async (roleId) => {
     throw new apiError(statusCode.LACK_PERMISSION, "Cannot delete default roles");
   }
 
+  // Soft delete permissions
   const deletedPermissions = await Promise.all(
     role.permissions.map(async (perm) => {
-      return await trackQueryTime(() => Permission.findByIdAndDelete(perm.permission), "Permission.findByIdAndDelete", { permissionId: perm.permission });
+      return await trackQueryTime(
+        () => Permission.findByIdAndUpdate(perm.permission, { isDeleted: true }, { new: true }),
+        "Permission.softDelete",
+        { permissionId: perm.permission }
+      );
     })
   );
 
-  await trackQueryTime(() => Role.findByIdAndDelete(roleId), "Role.findByIdAndDelete", { roleId });
-  logger.info(`Role deleted: ${roleId}`);
+  // Soft delete the role
+  const softDeletedRole = await trackQueryTime(
+    () => Role.findByIdAndUpdate(roleId, { isDeleted: true }, { new: true }),
+    "Role.softDelete",
+    { roleId }
+  );
+
+  logger.info(`Role soft deleted: ${roleId}`);
 
   return new ApiResponse(
     statusCode.OK,
-    { roleId: role.roleId, roleName: role.roleName, deletedPermissions },
-    `Role '${role.roleName}' (ID: ${role.roleId}) and associated permissions deleted successfully`
+    {
+      roleId: role.roleId,
+      roleName: role.roleName,
+      deletedPermissions,
+    },
+    `Role '${role.roleName}' and associated permissions soft deleted successfully`
   );
 };
+
 
 export const updatePermissionService = async ({ _id, permission }) => {
   logger.info(`Updating permissions for role ID: ${_id}`);
