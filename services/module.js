@@ -50,7 +50,7 @@ export const updateModuleService = async ({ moduleId, moduleData }) => {
 export const getModulesService = async () => {
   logger.info("Fetching all modules");
   const modules = await trackQueryTime(
-    () =>Module.find({}),
+    () => Module.find({}),
     "Module.find"
   );
   logger.info(`Fetched ${modules.length} modules`);
@@ -85,13 +85,13 @@ export const getModulesService = async (req) => {
 export const createRoleService = async (req) => {
   const { roleName, permissions, levelId } = req.body;
   const roleID = req.user.role;
-  
+
   const userRoleData = await trackQueryTime(
     () => Role.findById(roleID),
     "Role.findById",
     { roleID }
   );
-  
+
   const parentLevel = [...userRoleData.parentLevel, userRoleData.levelId];
   const createdBy = req.user._id;
   const searchRoleName = roleName.toUpperCase().trim();
@@ -102,7 +102,7 @@ export const createRoleService = async (req) => {
     "Role.findOne",
     { roleName: searchRoleName }
   );
-  
+
   if (existingRole) {
     logger.warn(`Role already exists: ${searchRoleName}`);
     throw new apiError(statusCode.ALREADY_EXISTS, "Role already exists", existingRole);
@@ -135,7 +135,7 @@ export const createRoleService = async (req) => {
     "Role.save",
     { roleName: searchRoleName }
   );
-  
+
   logger.info(`Role created successfully: ${searchRoleName}`);
 
   return new ApiResponse(statusCode.CREATED, savedRole, "Role created successfully");
@@ -144,7 +144,7 @@ export const createRoleService = async (req) => {
 
 //Test
 export const createRoleServiceTest = async (req) => {
-  const { roleName, permissions, levelId } = req.body; 
+  const { roleName, permissions, levelId } = req.body;
   const searchRoleName = roleName.toUpperCase().trim();
   logger.info(`Creating role: ${searchRoleName}`);
 
@@ -153,7 +153,7 @@ export const createRoleServiceTest = async (req) => {
     "Role.findOne",
     { roleName: searchRoleName }
   );
-  
+
   if (existingRole) {
     logger.warn(`Role already exists: ${searchRoleName}`);
     throw new apiError(statusCode.ALREADY_EXISTS, "Role already exists", existingRole);
@@ -181,53 +181,74 @@ export const createRoleServiceTest = async (req) => {
     "Role.save",
     { roleName: searchRoleName }
   );
-  
+
   logger.info(`Role created successfully: ${searchRoleName}`);
 
   return new ApiResponse(statusCode.CREATED, savedRole, "Role created successfully");
 };
 
 //get roles service
-export const getRolesService = async (req) => {
+// export const getRolesService = async (req) => {
+//   const { role } = req.user;
+//   const userRoleData = await trackQueryTime(
+//     () => Role.findById(role).populate("levelId"),
+//     "Role.findById",
+//     { role }
+//   );
+//   console.log("Role data", userRoleData.levelId.levelId);
+
+//   const levelData = await trackQueryTime(
+//     () => Level.find({ levelId: { $gt: userRoleData.levelId.levelId } }).select("_id"),
+//     "Level.find",
+//     { levelId: userRoleData.levelId.levelId }
+//   );
+
+//   const levelIds = levelData.map((level) => level._id);
+//   logger.info("Fetching all roles");
+
+//   const roles = await trackQueryTime(
+//     () => Role.find({ levelId: { $in: levelIds } })
+//       .populate("permissions.moduleId")
+//       .populate("permissions.permission")
+//       .populate("levelId"),
+//     "Role.find",
+//     { levelIds }
+//   );
+
+//   logger.info(`Fetched ${roles.length} roles`);
+//   return new ApiResponse(statusCode.OK, roles, "Roles fetched successfully");
+// };
+
+export const getRolesService = async (req, res) => {
   const { role } = req.user;
-  const userRoleData = await trackQueryTime(
-    () => Role.findById(role).populate("levelId"),
-    "Role.findById",
-    { role }
-  );
-  console.log("Role data", userRoleData.levelId.levelId);
-  
-  const levelData = await trackQueryTime(
-    () => Level.find({ levelId: { $gt: userRoleData.levelId.levelId } }).select("_id"),
-    "Level.find",
-    { levelId: userRoleData.levelId.levelId }
-  );
-  
-  const levelIds = levelData.map((level) => level._id);
-  logger.info("Fetching all roles");
-  
-  const roles = await trackQueryTime(
-    () => Role.find({ levelId: { $in: levelIds } })
-      .populate("permissions.moduleId")
-      .populate("permissions.permission")
-      .populate("levelId"),
-    "Role.find",
-    { levelIds }
-  );
-  
-  logger.info(`Fetched ${roles.length} roles`);
-  return new ApiResponse(statusCode.OK, roles, "Roles fetched successfully");
-};
+  const userData = await Role.findById(role)
+    .populate({
+      path: "levelId",
+      select: "levelId -_id",
+    })
+    .select("levelId -_id");
+  const userLevelId = userData.levelId.levelId;
+
+  const levelData = await Level.find({ levelId: userLevelId + 1 }).select("_id");
+  const roleData = await Role.find({ levelId: levelData[0]._id })
+    .populate("permissions.moduleId")
+    .populate("permissions.permission")
+    .populate("levelId");
+
+  return new ApiResponse(statusCode.OK, roleData, "Roles fetched successfully");;
+
+}
+
 
 export const updateRoleService = async (req) => {
-  const {_id, roleId, roleName, permissions, levelId } = req;
+  const { _id, roleId, roleName, permissions, levelId } = req;
 
   const existingRole = await trackQueryTime(
     () => Role.findById(_id),
     "Role.findById",
     { _id }
   );
-  
+
   if (!existingRole) {
     logger.warn(`Role not found: ${_id}`);
     throw new apiError(statusCode.NOT_FOUND, "Role not found");
@@ -237,15 +258,15 @@ export const updateRoleService = async (req) => {
     permissions.map(async ({ moduleId, permission }) => {
       let permissionData = permission._id
         ? await trackQueryTime(
-            () => Permission.findByIdAndUpdate(permission._id, permission, { new: true }),
-            "Permission.findByIdAndUpdate",
-            { permissionId: permission._id }
-          )
+          () => Permission.findByIdAndUpdate(permission._id, permission, { new: true }),
+          "Permission.findByIdAndUpdate",
+          { permissionId: permission._id }
+        )
         : await trackQueryTime(
-            () => new Permission(permission).save(),
-            "Permission.save",
-            { moduleId }
-          );
+          () => new Permission(permission).save(),
+          "Permission.save",
+          { moduleId }
+        );
       return { moduleId, permission: permissionData._id };
     })
   );
@@ -260,7 +281,7 @@ export const updateRoleService = async (req) => {
     "Role.save",
     { _id }
   );
-  
+
   logger.info(`Role updated successfully: ${_id}`);
   return new ApiResponse(statusCode.OK, updatedRole, "Role updated successfully");
 };
@@ -327,7 +348,7 @@ export const getRoleByIdService = async (roleId) => {
   const roles = await trackQueryTime(() => Role.findById(roleId)
     .populate("permissions.moduleId")
     .populate("permissions.permission")
-    .populate("levelId"), "Role.findById", { roleId }); 
+    .populate("levelId"), "Role.findById", { roleId });
   logger.info(`Role fetched: ${roleId}`);
   return new ApiResponse(statusCode.OK, roles, "Role fetched successfully");
 };
@@ -374,7 +395,7 @@ export const updateBlogServices = async (blogData) => {
     // Use `findByIdAndUpdate` with `$set` to allow partial updates
     const updatedBlog = await Blog.findByIdAndUpdate(
       _id,
-      { $set: updateFields }, 
+      { $set: updateFields },
       { new: true, runValidators: true }
     );
 
@@ -394,7 +415,7 @@ export const updateBlogServices = async (blogData) => {
 
 export const deleteBlogServices = async (blogId) => {
   logger.info(`Deleting blog with ID: ${blogId}`);
-  
+
   const deletedBlog = await trackQueryTime(
     () => Blog.findByIdAndDelete(blogId),
     "Blog.findByIdAndDelete",
