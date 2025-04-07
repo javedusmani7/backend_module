@@ -64,7 +64,7 @@ export const loginService = async (req) => {
 // Get All Users
 export const getUsersService = async () => {
   logger.info("Fetching all users");
-  const users = await trackQueryTime(() => User.find().populate("role", "roleId roleName _id").select("-password"), "User.find");
+  const users = await trackQueryTime(() => User.find({ isDeleted: false }).populate("role", "roleId roleName _id").select("-password"), "User.find");
 
   logger.info(`Successfully fetched ${users.length} users`);
   return { statusCode: statusCode.OK, data: users };
@@ -75,7 +75,11 @@ export const deleteUserService = async (req) => {
   const { _id } = req;
   logger.info(`Delete request for user ID: ${_id}`);
 
-  const user = await trackQueryTime(() => User.findByIdAndDelete(_id), "User.findByIdAndDelete", { _id });
+  const user = await trackQueryTime(
+    () => User.findByIdAndUpdate(_id, { isDeleted: true }, { new: true }),
+    "User.findByIdAndUpdate",
+    { _id }
+  );
   if (!user) {
     logger.warn(`User not found for deletion: ${_id}`);
     throw new apiError(statusCode.NOT_FOUND, "User not found");

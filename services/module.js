@@ -320,7 +320,7 @@ export const getRolesService = async (req, res) => {
 
 
 export const getAllRolesService = async () => {
-  const roles = await Role.find()
+  const roles = await Role.find({isDeleted: false})
     .populate("permissions.moduleId")
     .populate("permissions.permission")
     .populate("levelId");
@@ -467,7 +467,7 @@ export const getRoleByIdService = async (roleId) => {
 
 export const getBlogServices = async () => {
   logger.info("Fetching blogs from database");
-  const blogs = await trackQueryTime(() => Blog.find(), "Blog.find");
+  const blogs = await trackQueryTime(() => Blog.find({ isDeleted: false }), "Blog.find");
   logger.info("Fetched blogs from database");
   return new ApiResponse(statusCode.OK, blogs, "Blogs fetched successfully");
 };
@@ -475,12 +475,12 @@ export const getBlogServices = async () => {
 
 export const addBlogServices = async (blogData) => {
   try {
-    const { title, content } = blogData;
+    const { title, content , createdBy } = blogData;
 
     logger.info("Creating a new blog entry");
 
     const newBlog = await trackQueryTime(
-      () => Blog.create({ title, content }),
+      () => Blog.create({ title, content , createdBy }),
       "Blog.create"
     );
 
@@ -523,11 +523,16 @@ export const updateBlogServices = async (blogData) => {
 
 
 export const deleteBlogServices = async (blogId) => {
-  logger.info(`Deleting blog with ID: ${blogId}`);
+  logger.info(`Soft deleting blog with ID: ${blogId}`);
 
   const deletedBlog = await trackQueryTime(
-    () => Blog.findByIdAndDelete(blogId),
-    "Blog.findByIdAndDelete",
+    () =>
+      Blog.findByIdAndUpdate(
+        blogId,
+        { isDeleted: true },
+        { new: true }
+      ),
+    "Blog.findByIdAndUpdate",
     { blogId }
   );
 
@@ -536,15 +541,16 @@ export const deleteBlogServices = async (blogId) => {
     throw new apiError(statusCode.NOT_FOUND, "Blog not found");
   }
 
-  logger.info(`Blog deleted successfully: ${blogId}`);
-  return new ApiResponse(statusCode.OK, deletedBlog, "Blog deleted successfully");
+  logger.info(`Blog soft deleted successfully: ${blogId}`);
+  return new ApiResponse(statusCode.OK, deletedBlog, "Blog soft deleted successfully");
 };
+
 
 // News Services
 
 export const getNewsServices = async () => {
   logger.info("Fetching news from database");
-  const news = await trackQueryTime(() => News.find(), "News.find");
+  const news = await trackQueryTime(() => News.find({ isDeleted: false }), "News.find");
   logger.info("Fetched news from database");
   return new ApiResponse(statusCode.OK, news, "News fetched successfully");
 };
@@ -552,11 +558,11 @@ export const getNewsServices = async () => {
 // Add news
 export const addNewsServices = async (newsData) => {
   try {
-    const { title, content } = newsData;
+    const { title, content , createdBy } = newsData;
     logger.info("Creating a new news entry");
 
     const newNews = await trackQueryTime(
-      () => News.create({ title, content }),
+      () => News.create({ title, content , createdBy }),
       "News.create"
     );
 
@@ -597,8 +603,12 @@ export const deleteNewsServices = async (newsId) => {
   logger.info(`Deleting news with ID: ${newsId}`);
 
   const deletedNews = await trackQueryTime(
-    () => News.findByIdAndDelete(newsId),
-    "News.findByIdAndDelete",
+    () => News.findByIdAndUpdate(
+      newsId,
+      { isDeleted: true },
+      { new: true }
+    ),
+    "News.findByIdAndUpdate",
     { newsId }
   );
 

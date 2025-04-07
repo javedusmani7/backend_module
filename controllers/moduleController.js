@@ -128,7 +128,10 @@ export const addBlog = async (req, res, next) => {
     if (error) {
       throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
     }
-    const blogData = req.body;
+    const blogData = {
+      ...req.body,
+      createdBy: req.user._id
+    };
     const response = await addBlogServices(blogData);
 
     res.status(response.statusCode).json(response);
@@ -184,9 +187,11 @@ export const addNews = async (req, res, next) => {
     const { error } = newsSchema.validate(req.body);
     if (error) {
       throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
-    }
-
-    const newsData = req.body;
+    }   
+    const newsData = {
+      ...req.body,
+      createdBy: req.user._id,
+    };
     const response = await addNewsServices(newsData);
 
     res.status(response.statusCode).json(response);
