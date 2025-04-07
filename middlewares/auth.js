@@ -57,11 +57,19 @@ export const verifyPermission = asyncHandler(async (req, res, next) => {
 
 export const verifyLevel = asyncHandler(async (req, res, next) => {
   const { role } = req.user;
-  const { levelId } = req.body;
+  // const { levelId } = req.body;
   const roleData = await getRoleByIdService(role);
-  const levelData = await getLevelByIdService(levelId);
+  let levelData;
+  if (req.body?.levelId) {
+   levelData = await getLevelByIdService(levelId);
+   levelData = levelData.data;
+  }
+
+  if (req.body?._id) {
+    levelData = await Role.findById(req.body._id).select("levelId");
+  }
   const userLevel = roleData.data.levelId.levelId;
-  const roleLevel = levelData.data.levelId;
+  const roleLevel = levelData.levelId;
   console.log("userLevel", userLevel);
   console.log("roleLevel", roleLevel);
 
