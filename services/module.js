@@ -168,7 +168,9 @@ export const createRoleService = async (req) => {
   }
 
   const existingLevel = await Role.find({ levelId });
-  if (existingLevel) {
+  console.log("existingLevel", existingLevel.length);
+  
+  if (existingLevel.length) {
     throw new apiError(statusCode.ALREADY_EXISTS, "Role already exists for the given leven", existingLevel);
   }
 
