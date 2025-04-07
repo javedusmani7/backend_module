@@ -29,7 +29,7 @@ export const newuserRegistrationSchema = Joi.object({
   role: Joi.string().length(24).optional(),
   userId: Joi.string().optional(),
   emailVerified: Joi.boolean().optional(),
-  ipv4: Joi.string().ip({ version: ['ipv4'] }).optional(),
+  ipv4: Joi.string().ip({ version: ['ipv4'], cidr: 'optional' }).optional(),
   ipv4Verified: Joi.boolean().optional(),
   ipv6: Joi.string().ip({ version: ['ipv6'] }).optional(),
   ipv6Verified: Joi.boolean().optional(),
