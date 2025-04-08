@@ -38,4 +38,7 @@ export const newuserRegistrationSchema = Joi.object({
   mobileNumber: Joi.string().pattern(/^\d{10,15}$/).optional(),
   mobileVerified: Joi.boolean().optional(),
   multiLogin: Joi.boolean().optional(),
+
+  //heirarchy fields
+  share : Joi.number().strict().optional(),
 });

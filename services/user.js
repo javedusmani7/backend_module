@@ -137,7 +137,7 @@ export const updateUserService = async (req) => {
 
 //New User Service
 export const addUserService = async (req) => {
-  const { name, email, password, userId, emailVerified, ipv4, ipv4Verified, ipv6, ipv6Verified, deviceId, deviceIdVerified, mobileNumber, mobileVerified, multiLogin , role: roleId } = req.body;
+  const { name, email, password, userId, emailVerified, ipv4, ipv4Verified, ipv6, ipv6Verified, deviceId, deviceIdVerified, mobileNumber, mobileVerified, multiLogin , role: roleId , share} = req.body;
 
   logger.info(`Adding new user: ${email}`);
   if (!roleId) {
@@ -154,6 +154,11 @@ export const addUserService = async (req) => {
   if (existingUser) {
     logger.warn(`User already exists: ${email}`);
     throw new apiError(statusCode.ALREADY_EXISTS, "User already exists", existingUser);
+  }
+
+  const shareCalculate = await calculateParentShare(req.user._id, share);
+  if(!shareCalculate) {
+    throw new apiError(statusCode.BAD_REQUEST, "Insufficient share available");
   }
 
   const hashedPassword = await encryptPassword(password);
@@ -173,10 +178,60 @@ export const addUserService = async (req) => {
     mobileNumber: mobileNumber || null,
     mobileVerified: mobileVerified || true,
     multiLogin: multiLogin || true,
+    parent_Id : req.user._id,
+    share: share || 0,
+    remaining_share: share || 0,
   });
 
   await trackQueryTime(() => newUser.save(), "User.save", { email });
 
   logger.info(`User added successfully: ${email}`);
   return new ApiResponse(statusCode.CREATED, newUser, "User added successfully");
+};
+
+//calculate parent share
+export const calculateParentShare = async (parent, share) => {
+  const parentUser = await User.findOne({_id : parent} , { remaining_share: 1, share: 1 });
+  if (!parentUser) {
+    throw new apiError(statusCode.NOT_FOUND, "User not found");
+  }
+
+  if(parentUser.remaining_share < share) {
+    throw new apiError(statusCode.BAD_REQUEST, "Insufficient share available");
+  }
+
+  parentUser.remaining_share = parentUser.remaining_share - share;
+  return await parentUser.save();
+};
+
+//Get partnerShip Service
+export const getpartnerShipService = async (userId) => {
+  const userData = await User.aggregate(
+    [
+      {$lookup: {
+        from: "roles",
+        localField: "role",
+        foreignField: "_id",
+        as: "roleData"
+      }},
+      { $unwind: "$roleData" },         // Flatten the array
+    
+        {$lookup: {
+        from: "levels",
+        localField: "roleData.levelId",
+        foreignField: "_id",
+        as: "levelId",
+      }},
+      {$unwind : "$levelId"},
+      {
+        $group: {
+          _id: {name :"$roleData.roleName", level :"$levelId.levelId" },    
+          share: { $first: "$share" },            
+          remaining_share: { $first: "$remaining_share" }  
+        }
+      },
+        {$sort : {"_id.level" : 1}},
+    ]
+  )
+  return new ApiResponse(statusCode.OK, userData, "User fetched successfully");
 };
