@@ -226,7 +226,8 @@ export const deleteNews = async (req, res, next) => {
     }
 
     const { _id } = req.body;
-    const response = await deleteNewsServices(_id);
+    const currentUserId = req.user._id; 
+    const response = await deleteNewsServices(_id , currentUserId);
 
     res.status(response.statusCode).json(response);
   } catch (error) {

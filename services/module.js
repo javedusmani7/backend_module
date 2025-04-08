@@ -11,6 +11,7 @@ import { apiError } from "../utils/apiError.js";
 import Blog from "../models/Blog.js";
 import News from "../models/News.js";
 import { log } from "console";
+import User from "../models/User.js";
 
 
 // Module Services
@@ -315,8 +316,18 @@ export const getRolesService = async (req, res) => {
     .populate("permissions.permission")
     .populate("levelId");
 
-  const obj = roleData[0].permissions.map((permission) => {
-    let obj = permission.permission.toObject();
+    let object = roleData.map((role) => {
+      return {
+        ...role.toObject(),
+        permissions: role.permissions.map((permission) => ({
+          moduleId: permission.moduleId,
+          permission: permission.permission
+        }))
+      };
+    });
+  
+  object[0].permissions = object[0].permissions.map((permission) => {    
+    let obj = permission.permission.toObject();    
     for (let key in obj) {
       if (typeof obj[key] === "boolean" && obj[key] === false) {
         delete obj[key];
@@ -327,13 +338,7 @@ export const getRolesService = async (req, res) => {
       permission: obj,
     };
   });
-
-  let roleData1 = roleData.map((role) => {
-    return { ...(role).toObject(), permissions: obj }
-  })
-
-  return new ApiResponse(statusCode.OK, roleData1, "Roles fetched successfully");;
-
+  return new ApiResponse(statusCode.OK, object, "Roles fetched successfully");
 };
 
 
@@ -356,7 +361,7 @@ export const getAllRolesService = async (req) => {
   logger.info("Fetching all roles");
 
   const roles = await trackQueryTime(
-    () => Role.find({ levelId: { $in: levelIds },   isDeleted: false, })
+    () => Role.find({ levelId: { $in: levelIds },  isDeleted: false, })
       .populate("permissions.moduleId")
       .populate("permissions.permission")
       .populate("levelId"),
@@ -364,8 +369,31 @@ export const getAllRolesService = async (req) => {
     { levelIds }
   );
 
-  logger.info(`Fetched ${roles.length} roles`);
-  return new ApiResponse(statusCode.OK, roles, "Roles fetched successfully");
+  let object = roles.map((role) => {
+    return {
+      ...role.toObject(),
+      permissions: role.permissions.map((permission) => ({
+        moduleId: permission.moduleId,
+        permission: permission.permission
+      }))
+    };
+  });
+  object.forEach((role) => {
+    role.permissions =   role.permissions.map((permission) => {    
+      let obj = permission.permission.toObject();    
+      for (let key in obj) {
+        if (typeof obj[key] === "boolean" && obj[key] === false) {
+          delete obj[key];
+        }
+      }
+      return {
+        moduleId: permission.moduleId,
+        permission: obj,
+      };
+    });
+  });
+return new ApiResponse(statusCode.OK, object, "Roles fetched successfully");
+ 
 };
 
 export const updateRoleService = async (req) => {
@@ -640,24 +668,67 @@ export const updateNewsServices = async (newsData) => {
 };
 
 // Delete news
-export const deleteNewsServices = async (newsId) => {
+// export const deleteNewsServices = async (newsId) => {
+//   logger.info(`Deleting news with ID: ${newsId}`);
+
+//   const deletedNews = await trackQueryTime(
+//     () => News.findByIdAndUpdate(
+//       newsId,
+//       { isDeleted: true },
+//       { new: true }
+//     ),
+//     "News.findByIdAndUpdate",
+//     { newsId }
+//   );
+
+//   if (!deletedNews) {
+//     logger.warn(`News not found: ${newsId}`);
+//     throw new apiError(statusCode.NOT_FOUND, "News not found");
+//   }
+
+//   logger.info(`News deleted successfully: ${newsId}`);
+//   return new ApiResponse(statusCode.OK, deletedNews, "News deleted successfully");
+// };
+
+export const deleteNewsServices = async (newsId, currentUserId) => {
   logger.info(`Deleting news with ID: ${newsId}`);
 
-  const deletedNews = await trackQueryTime(
-    () => News.findByIdAndUpdate(
-      newsId,
-      { isDeleted: true },
-      { new: true }
-    ),
-    "News.findByIdAndUpdate",
-    { newsId }
-  );
+  const news = await News.findById(newsId).populate({
+    path: 'createdBy',
+    populate: {
+      path: 'role',
+      populate: {
+        path: 'levelId',
+      },
+    },
+  });
 
-  if (!deletedNews) {
-    logger.warn(`News not found: ${newsId}`);
+  if (!news) {
     throw new apiError(statusCode.NOT_FOUND, "News not found");
   }
 
-  logger.info(`News deleted successfully: ${newsId}`);
+  const currentUser = await User.findById(currentUserId).populate({
+    path: 'role',
+    populate: {
+      path: 'levelId',
+    },
+  });
+
+  const currentLevel = currentUser?.role?.levelId?.levelId;
+  const creatorLevel = news?.createdBy?.role?.levelId?.levelId;
+
+  console.log("currentLevel", currentLevel);
+  console.log("creatorLevel", creatorLevel);
+  
+
+  if (currentLevel == null || creatorLevel == null) {
+    throw new apiError(statusCode.BAD_REQUEST, "Could not determine user levels");
+  }
+
+  if (currentLevel > creatorLevel) {
+    throw new apiError(statusCode.FORBIDDEN, "You are not allowed to delete this record.");
+  }
+
+  const deletedNews = await News.findByIdAndDelete(newsId);
   return new ApiResponse(statusCode.OK, deletedNews, "News deleted successfully");
 };
