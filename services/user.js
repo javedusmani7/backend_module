@@ -62,12 +62,35 @@ export const loginService = async (req) => {
 };
 
 // Get All Users
-export const getUsersService = async () => {
+export const getUsersService = async (req) => {
+  
   logger.info("Fetching all users");
-  const users = await trackQueryTime(() => User.find({ isDeleted: false }).populate("role", "roleId roleName _id").select("-password"), "User.find");
-
-  logger.info(`Successfully fetched ${users.length} users`);
-  return { statusCode: statusCode.OK, data: users };
+  const { levelId }  = await Role.findById(req.user.role).populate("levelId").select("levelId");
+  const role_list = await Role.aggregate([
+    {
+      $lookup: {
+        from: 'levels',
+        localField: 'levelId',
+        foreignField: '_id',
+        as: 'level'
+      }
+    },
+    {
+      $unwind: '$level'
+    },
+    {
+      $match: { 'level.levelId': { $gt: levelId.levelId } } 
+    },
+    {
+      $project: { _id: 1 }
+    }
+  ]);
+  const user_list = await User.find({
+    role: { $in: role_list.map(r => r._id) }
+  });
+  
+  logger.info(`Successfully fetched ${user_list.length} users`);
+  return { statusCode: statusCode.OK, data: user_list };
 };
 
 // Delete User Service
