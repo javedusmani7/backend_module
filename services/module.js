@@ -151,6 +151,8 @@ export const getModulesService = async (req) => {
 // };
 
 export const createRoleService = async (req) => {
+  console.log("ASHISH");
+  
   const { roleName, permissions, levelId } = req.body;
   const roleID = req.user.role;
 
@@ -170,6 +172,7 @@ export const createRoleService = async (req) => {
     "Role.findOne",
     { roleName: searchRoleName }
   );
+console.log("BIJENDRA");
 
   if (existingRole) {
     logger.warn(`Role already exists: ${searchRoleName}`);
@@ -295,6 +298,41 @@ export const createRoleServiceTest = async (req) => {
 
 export const getRolesService = async (req, res) => {
   const { role } = req.user;
+  const roleData = await Role.find({ 
+      _id: role,
+      isDeleted: false
+    })
+    .populate("permissions.moduleId")
+    .populate("permissions.permission")
+    .populate("levelId");
+
+    let object = roleData.map((role) => {
+      return {
+        ...role.toObject(),
+        permissions: role.permissions.map((permission) => ({
+          moduleId: permission.moduleId,
+          permission: permission.permission
+        }))
+      };
+    });    
+  
+  object[0].permissions = object[0].permissions.map((permission) => {    
+    let obj = permission.permission.toObject();    
+    for (let key in obj) {
+      if (typeof obj[key] === "boolean" && obj[key] === false) {
+        delete obj[key];
+      }
+    }
+    return {
+      moduleId: permission.moduleId,
+      permission: obj,
+    };
+  });
+  return new ApiResponse(statusCode.OK, object, "Roles fetched successfully");
+};
+
+export const getChildRoleService = async (req, res) => {
+  const { role } = req.user;
   const userData = await Role.findById(role)
     .populate({
       path: "levelId",
@@ -395,6 +433,8 @@ export const getAllRolesService = async (req) => {
 return new ApiResponse(statusCode.OK, object, "Roles fetched successfully");
  
 };
+
+
 
 export const updateRoleService = async (req) => {
   const { _id, roleId, roleName, permissions, levelId } = req;

@@ -81,6 +81,9 @@ export const getUsersService = async (req) => {
   const { levelId }  = await Role.findById(req.user.role).populate("levelId").select("levelId");
   const role_list = await Role.aggregate([
     {
+      $match: {isDeleted: false}
+    },
+    {
       $lookup: {
         from: 'levels',
         localField: 'levelId',
@@ -99,7 +102,8 @@ export const getUsersService = async (req) => {
     }
   ]);
   const user_list = await User.find({
-    role: { $in: role_list.map(r => r._id) }
+    role: { $in: role_list.map(r => r._id) },
+    isDeleted: false
   }).populate("role", "roleId roleName");
 
   
@@ -187,7 +191,7 @@ export const addUserService = async (req) => {
     throw new apiError(statusCode.NOT_FOUND, "USER role does not exist");
   }
 
-  const existingUser = await trackQueryTime(() => User.findOne({ email }), "User.findOne", { email });
+  const existingUser = await trackQueryTime(() => User.findOne({ email , isDeleted: false}), "User.findOne", { email });
   if (existingUser) {
     logger.warn(`User already exists: ${email}`);
     throw new apiError(statusCode.ALREADY_EXISTS, "User already exists", existingUser);
