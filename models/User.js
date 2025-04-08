@@ -22,6 +22,11 @@ const UserSchema = new mongoose.Schema(
     mobileVerified: { type: Boolean, default: true },
     multiLogin: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false },
+
+    //heirarchy fields
+    parent_Id: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    share: { type: Number, default: 0 },
+    remaining_share: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
