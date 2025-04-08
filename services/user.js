@@ -39,27 +39,40 @@ export const registerService = async (req) => {
 
 // Login Service
 export const loginService = async (req) => {
-  const { email, password } = req.body;
-  logger.info(`Login attempt for email: ${email}`);
+  const { identifier, password } = req.body;
+  logger.info(`Login attempt for identifier: ${identifier}`);
 
-  const user = await trackQueryTime(() => User.findOne({ email }).populate("role", "roleId roleName"), "User.findOne", { email });
+  // Match user either by email or name
+  const user = await trackQueryTime(() =>
+    User.findOne({
+      $or: [
+        { email: identifier },
+        { name: identifier }
+      ]
+    }).populate("role", "roleId roleName"),
+    "User.findOne",
+    { identifier }
+  );
+
   if (!user) {
-    logger.warn(`Login failed: User not found (${email})`);
+    logger.warn(`Login failed: User not found (${identifier})`);
     throw new apiError(statusCode.NOT_FOUND, "User not found");
   }
 
   const isMatch = await comparePassword(password, user.password);
   if (!isMatch) {
-    logger.warn(`Invalid login attempt: ${email}`);
+    logger.warn(`Invalid login attempt: ${identifier}`);
     throw new apiError(statusCode.UNAUTHORIZED, "Password mismatch");
   }
 
   const payload = { id: user._id, email: user.email, role: user.role };
   const token = jwt.sign(payload, process.env.TOKEN_SECRET, { expiresIn: "1h" });
 
-  logger.info(`User logged in successfully: ${email}`);
+  logger.info(`User logged in successfully: ${identifier}`);
   return new ApiResponse(statusCode.OK, { token, user: payload }, "User logged in successfully");
 };
+
+
 
 // Get All Users
 export const getUsersService = async () => {
