@@ -34,7 +34,7 @@ export const login = asyncHandler(async (req, res) => {
 });
 
 export const getUsers = asyncHandler(async (req, res) => {
-  const result = await getUsersService();
+  const result = await getUsersService(req);
   if (!result || result.length === 0) {
     throw new apiError(statusCode.NOT_FOUND, "No users found");
   }
