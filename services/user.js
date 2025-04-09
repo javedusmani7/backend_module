@@ -39,35 +39,76 @@ export const registerService = async (req) => {
 
 // Login Service
 export const loginService = async (req) => {
-  const { email, password } = req.body;
-  logger.info(`Login attempt for email: ${email}`);
+  const { identifier, password } = req.body;
+  logger.info(`Login attempt for identifier: ${identifier}`);
 
-  const user = await trackQueryTime(() => User.findOne({ email }).populate("role", "roleId roleName"), "User.findOne", { email });
+  // Match user either by email or name
+  const user = await trackQueryTime(() =>
+    User.findOne({
+      $or: [
+        { email: identifier },
+        { name: identifier }
+      ]
+    }).populate("role", "roleId roleName"),
+    "User.findOne",
+    { identifier }
+  );
+
   if (!user) {
-    logger.warn(`Login failed: User not found (${email})`);
+    logger.warn(`Login failed: User not found (${identifier})`);
     throw new apiError(statusCode.NOT_FOUND, "User not found");
   }
 
   const isMatch = await comparePassword(password, user.password);
   if (!isMatch) {
-    logger.warn(`Invalid login attempt: ${email}`);
+    logger.warn(`Invalid login attempt: ${identifier}`);
     throw new apiError(statusCode.UNAUTHORIZED, "Password mismatch");
   }
 
   const payload = { id: user._id, email: user.email, role: user.role };
   const token = jwt.sign(payload, process.env.TOKEN_SECRET, { expiresIn: "1h" });
 
-  logger.info(`User logged in successfully: ${email}`);
+  logger.info(`User logged in successfully: ${identifier}`);
   return new ApiResponse(statusCode.OK, { token, user: payload }, "User logged in successfully");
 };
 
-// Get All Users
-export const getUsersService = async () => {
-  logger.info("Fetching all users");
-  const users = await trackQueryTime(() => User.find().populate("role", "roleId roleName _id").select("-password"), "User.find");
 
-  logger.info(`Successfully fetched ${users.length} users`);
-  return { statusCode: statusCode.OK, data: users };
+
+// Get All Users
+export const getUsersService = async (req) => {
+  
+  logger.info("Fetching all users");
+  const { levelId }  = await Role.findById(req.user.role).populate("levelId").select("levelId");
+  const role_list = await Role.aggregate([
+    {
+      $match: {isDeleted: false}
+    },
+    {
+      $lookup: {
+        from: 'levels',
+        localField: 'levelId',
+        foreignField: '_id',
+        as: 'level'
+      }
+    },
+    {
+      $unwind: '$level'
+    },
+    {
+      $match: { 'level.levelId': { $gt: levelId.levelId } } 
+    },
+    {
+      $project: { _id: 1 }
+    }
+  ]);
+  const user_list = await User.find({
+    role: { $in: role_list.map(r => r._id) },
+    isDeleted: false
+  }).populate("role", "roleId roleName");
+
+  
+  logger.info(`Successfully fetched ${user_list.length} users`);
+  return { statusCode: statusCode.OK, data: user_list };
 };
 
 // Delete User Service
@@ -75,7 +116,11 @@ export const deleteUserService = async (req) => {
   const { _id } = req;
   logger.info(`Delete request for user ID: ${_id}`);
 
-  const user = await trackQueryTime(() => User.findByIdAndDelete(_id), "User.findByIdAndDelete", { _id });
+  const user = await trackQueryTime(
+    () => User.findByIdAndUpdate(_id, { isDeleted: true }, { new: true }),
+    "User.findByIdAndUpdate",
+    { _id }
+  );
   if (!user) {
     logger.warn(`User not found for deletion: ${_id}`);
     throw new apiError(statusCode.NOT_FOUND, "User not found");
@@ -133,7 +178,7 @@ export const updateUserService = async (req) => {
 
 //New User Service
 export const addUserService = async (req) => {
-  const { name, email, password, userId, emailVerified, ipv4, ipv4Verified, ipv6, ipv6Verified, deviceId, deviceIdVerified, mobileNumber, mobileVerified, multiLogin , role: roleId } = req.body;
+  const { name, email, password, userId, emailVerified, ipv4, ipv4Verified, ipv6, ipv6Verified, deviceId, deviceIdVerified, mobileNumber, mobileVerified, multiLogin , role: roleId , share} = req.body;
 
   logger.info(`Adding new user: ${email}`);
   if (!roleId) {
@@ -146,10 +191,15 @@ export const addUserService = async (req) => {
     throw new apiError(statusCode.NOT_FOUND, "USER role does not exist");
   }
 
-  const existingUser = await trackQueryTime(() => User.findOne({ email }), "User.findOne", { email });
+  const existingUser = await trackQueryTime(() => User.findOne({ email , isDeleted: false}), "User.findOne", { email });
   if (existingUser) {
     logger.warn(`User already exists: ${email}`);
     throw new apiError(statusCode.ALREADY_EXISTS, "User already exists", existingUser);
+  }
+
+  const shareCalculate = await calculateParentShare(req.user._id, share);
+  if(!shareCalculate) {
+    throw new apiError(statusCode.BAD_REQUEST, "Insufficient share available");
   }
 
   const hashedPassword = await encryptPassword(password);
@@ -169,10 +219,60 @@ export const addUserService = async (req) => {
     mobileNumber: mobileNumber || null,
     mobileVerified: mobileVerified || true,
     multiLogin: multiLogin || true,
+    parent_Id : req.user._id,
+    share: share || 0,
+    remaining_share: share || 0,
   });
 
   await trackQueryTime(() => newUser.save(), "User.save", { email });
 
   logger.info(`User added successfully: ${email}`);
   return new ApiResponse(statusCode.CREATED, newUser, "User added successfully");
+};
+
+//calculate parent share
+export const calculateParentShare = async (parent, share) => {
+  const parentUser = await User.findOne({_id : parent} , { remaining_share: 1, share: 1 });
+  if (!parentUser) {
+    throw new apiError(statusCode.NOT_FOUND, "User not found");
+  }
+
+  if(parentUser.remaining_share < share) {
+    throw new apiError(statusCode.BAD_REQUEST, "Insufficient share available");
+  }
+
+  parentUser.remaining_share = parentUser.remaining_share - share;
+  return await parentUser.save();
+};
+
+//Get partnerShip Service
+export const getpartnerShipService = async (userId) => {
+  const userData = await User.aggregate(
+    [
+      {$lookup: {
+        from: "roles",
+        localField: "role",
+        foreignField: "_id",
+        as: "roleData"
+      }},
+      { $unwind: "$roleData" },         // Flatten the array
+    
+        {$lookup: {
+        from: "levels",
+        localField: "roleData.levelId",
+        foreignField: "_id",
+        as: "levelId",
+      }},
+      {$unwind : "$levelId"},
+      {
+        $group: {
+          _id: {name :"$roleData.roleName", level :"$levelId.levelId" },    
+          share: { $first: "$share" },            
+          remaining_share: { $first: "$remaining_share" }  
+        }
+      },
+        {$sort : {"_id.level" : 1}},
+    ]
+  )
+  return new ApiResponse(statusCode.OK, userData, "User fetched successfully");
 };

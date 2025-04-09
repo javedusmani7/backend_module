@@ -1,6 +1,6 @@
 
 import { createModuleSchema, createRoleSchema, deleteModuleSchema, roleIdSchema, updateModuleSchema, updateRoleSchema } from "../validation/moduleValidation.js";
-import { createModuleService, createRoleService, deleteModuleService, deleteRoleService, getModulesService, getRoleByIdService, getRolesService, updateModuleService, updatePermissionService, updateRoleService, getBlogServices, getNewsServices, createRoleServiceTest, updateBlogServices, deleteBlogServices, addBlogServices, updateNewsServices, deleteNewsServices, addNewsServices, getAllRolesService  } from "../services/module.js";
+import { createModuleService, createRoleService, deleteModuleService, deleteRoleService, getModulesService, getRoleByIdService, getRolesService, updateModuleService, updatePermissionService, updateRoleService, getBlogServices, getNewsServices, createRoleServiceTest, updateBlogServices, deleteBlogServices, addBlogServices, updateNewsServices, deleteNewsServices, addNewsServices, getAllRolesService, getChildRoleService  } from "../services/module.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { apiError } from "../utils/apiError.js";
 import { statusCode } from "../config/config.js";
@@ -46,12 +46,13 @@ export const getModules = asyncHandler(async (req, res) => {
 });
 
 export const createRole = asyncHandler(async (req, res) => {
-  console.log("reqssss.body", req);
+  console.log("AGRAWAL");
+  
   const { error } = createRoleSchema.validate(req.body);
   if (error) {
     throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
   }
-  
+  console.log("SAHIL");
   
   const result = await createRoleService(req);
   res.status(result.statusCode).json(result);
@@ -128,7 +129,10 @@ export const addBlog = async (req, res, next) => {
     if (error) {
       throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
     }
-    const blogData = req.body;
+    const blogData = {
+      ...req.body,
+      createdBy: req.user._id
+    };
     const response = await addBlogServices(blogData);
 
     res.status(response.statusCode).json(response);
@@ -184,9 +188,11 @@ export const addNews = async (req, res, next) => {
     const { error } = newsSchema.validate(req.body);
     if (error) {
       throw new apiError(statusCode.USER_ERROR, error.details[0].message, error.details);
-    }
-
-    const newsData = req.body;
+    }   
+    const newsData = {
+      ...req.body,
+      createdBy: req.user._id,
+    };
     const response = await addNewsServices(newsData);
 
     res.status(response.statusCode).json(response);
@@ -221,10 +227,16 @@ export const deleteNews = async (req, res, next) => {
     }
 
     const { _id } = req.body;
-    const response = await deleteNewsServices(_id);
+    const currentUserId = req.user._id; 
+    const response = await deleteNewsServices(_id , currentUserId);
 
     res.status(response.statusCode).json(response);
   } catch (error) {
     next(error);
   }
 };
+
+export const getChildRole = asyncHandler( async (req, res) => {
+  const response = await getChildRoleService(req);
+  res.status(response.statusCode).json(response);
+})

@@ -2,7 +2,7 @@ import { apiError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { statusCode } from "../config/config.js";
 import { userRegistrationSchema, userLoginSchema, deleteUserSchema, updateRoleSchema, newuserRegistrationSchema } from "../validation/userValidation.js";
-import { registerService, loginService, getUsersService, deleteUserService, adminUpdateUserService, getUsersByIdService, updateUserService, addUserService } from "../services/user.js";
+import { registerService, loginService, getUsersService, deleteUserService, adminUpdateUserService, getUsersByIdService, updateUserService, addUserService, getpartnerShipService } from "../services/user.js";
 import { updateUserSchema } from "../validation/moduleValidation.js";
 
 export const register = asyncHandler(async (req, res) => {
@@ -34,7 +34,7 @@ export const login = asyncHandler(async (req, res) => {
 });
 
 export const getUsers = asyncHandler(async (req, res) => {
-  const result = await getUsersService();
+  const result = await getUsersService(req);
   if (!result || result.length === 0) {
     throw new apiError(statusCode.NOT_FOUND, "No users found");
   }
@@ -82,5 +82,12 @@ export const addUser = asyncHandler(async (req, res) => {
   }
 
   const result = await addUserService(req);
+  res.status(result.statusCode).json(result);
+});
+
+
+//add New user
+export const getpartnerShipController = asyncHandler(async (req, res) => {
+  const result = await getpartnerShipService(req);
   res.status(result.statusCode).json(result);
 });

@@ -1,5 +1,5 @@
 import express from "express";
-import { register, login, getUsers, deleteUser, adminUpdateUser, getUserById, updateUser, addUser } from "../controllers/userController.js";
+import { register, login, getUsers, deleteUser, adminUpdateUser, getUserById, updateUser, addUser, getpartnerShipController } from "../controllers/userController.js";
 import { apiLimiter } from "../middlewares/rateLimiter.js";
 import moduleRoutes from "./module.js";
 import { verifyAdmin, verifyJWT, verifyPermission } from "../middlewares/auth.js";
@@ -16,6 +16,7 @@ router.get("/getloginuser", verifyJWT, getUserById);
 router.post("/updateuser", verifyJWT, updateUser);
 //Add New user
 router.post("/adduser", verifyJWT, addUser);
+router.get("/get_partnerShip", getpartnerShipController);
 router.use(moduleRoutes);
 
 export default router;

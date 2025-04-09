@@ -11,6 +11,7 @@ import { apiError } from "../utils/apiError.js";
 import Blog from "../models/Blog.js";
 import News from "../models/News.js";
 import { log } from "console";
+import User from "../models/User.js";
 
 
 // Module Services
@@ -150,6 +151,8 @@ export const getModulesService = async (req) => {
 // };
 
 export const createRoleService = async (req) => {
+  console.log("ASHISH");
+  
   const { roleName, permissions, levelId } = req.body;
   const roleID = req.user.role;
 
@@ -169,6 +172,7 @@ export const createRoleService = async (req) => {
     "Role.findOne",
     { roleName: searchRoleName }
   );
+console.log("BIJENDRA");
 
   if (existingRole) {
     logger.warn(`Role already exists: ${searchRoleName}`);
@@ -177,7 +181,7 @@ export const createRoleService = async (req) => {
 
   const existingLevel = await Role.find({ levelId });
   console.log("existingLevel", existingLevel.length);
-  
+
   if (existingLevel.length) {
     throw new apiError(statusCode.ALREADY_EXISTS, "Role already exists for the given leven", existingLevel);
   }
@@ -294,6 +298,41 @@ export const createRoleServiceTest = async (req) => {
 
 export const getRolesService = async (req, res) => {
   const { role } = req.user;
+  const roleData = await Role.find({ 
+      _id: role,
+      isDeleted: false
+    })
+    .populate("permissions.moduleId")
+    .populate("permissions.permission")
+    .populate("levelId");
+
+    let object = roleData.map((role) => {
+      return {
+        ...role.toObject(),
+        permissions: role.permissions.map((permission) => ({
+          moduleId: permission.moduleId,
+          permission: permission.permission
+        }))
+      };
+    });    
+  
+  object[0].permissions = object[0].permissions.map((permission) => {    
+    let obj = permission.permission.toObject();    
+    for (let key in obj) {
+      if (typeof obj[key] === "boolean" && obj[key] === false) {
+        delete obj[key];
+      }
+    }
+    return {
+      moduleId: permission.moduleId,
+      permission: obj,
+    };
+  });
+  return new ApiResponse(statusCode.OK, object, "Roles fetched successfully");
+};
+
+export const getChildRoleService = async (req, res) => {
+  const { role } = req.user;
   const userData = await Role.findById(role)
     .populate({
       path: "levelId",
@@ -315,17 +354,87 @@ export const getRolesService = async (req, res) => {
     .populate("permissions.permission")
     .populate("levelId");
 
-  return new ApiResponse(statusCode.OK, roleData, "Roles fetched successfully");
+    let object = roleData.map((role) => {
+      return {
+        ...role.toObject(),
+        permissions: role.permissions.map((permission) => ({
+          moduleId: permission.moduleId,
+          permission: permission.permission
+        }))
+      };
+    });
+  
+  object[0].permissions = object[0].permissions.map((permission) => {    
+    let obj = permission.permission.toObject();    
+    for (let key in obj) {
+      if (typeof obj[key] === "boolean" && obj[key] === false) {
+        delete obj[key];
+      }
+    }
+    return {
+      moduleId: permission.moduleId,
+      permission: obj,
+    };
+  });
+  return new ApiResponse(statusCode.OK, object, "Roles fetched successfully");
 };
 
 
-export const getAllRolesService = async () => {
-  const roles = await Role.find()
-    .populate("permissions.moduleId")
-    .populate("permissions.permission")
-    .populate("levelId");
-  return new ApiResponse(statusCode.OK, roles, "Roles fetched successfully");
+export const getAllRolesService = async (req) => {
+  const { role } = req.user;
+  const userRoleData = await trackQueryTime(
+    () => Role.findById(role).populate("levelId"),
+    "Role.findById",
+    { role }
+  );
+  console.log("Role data", userRoleData.levelId.levelId);
+
+  const levelData = await trackQueryTime(
+    () => Level.find({ levelId: { $gt: userRoleData.levelId.levelId } }).select("_id"),
+    "Level.find",
+    { levelId: userRoleData.levelId.levelId }
+  );
+
+  const levelIds = levelData.map((level) => level._id);
+  logger.info("Fetching all roles");
+
+  const roles = await trackQueryTime(
+    () => Role.find({ levelId: { $in: levelIds },  isDeleted: false, })
+      .populate("permissions.moduleId")
+      .populate("permissions.permission")
+      .populate("levelId"),
+    "Role.find",
+    { levelIds }
+  );
+
+  let object = roles.map((role) => {
+    return {
+      ...role.toObject(),
+      permissions: role.permissions.map((permission) => ({
+        moduleId: permission.moduleId,
+        permission: permission.permission
+      }))
+    };
+  });
+  object.forEach((role) => {
+    role.permissions =   role.permissions.map((permission) => {    
+      let obj = permission.permission.toObject();    
+      for (let key in obj) {
+        if (typeof obj[key] === "boolean" && obj[key] === false) {
+          delete obj[key];
+        }
+      }
+      return {
+        moduleId: permission.moduleId,
+        permission: obj,
+      };
+    });
+  });
+return new ApiResponse(statusCode.OK, object, "Roles fetched successfully");
+ 
 };
+
+
 
 export const updateRoleService = async (req) => {
   const { _id, roleId, roleName, permissions, levelId } = req;
@@ -467,7 +576,7 @@ export const getRoleByIdService = async (roleId) => {
 
 export const getBlogServices = async () => {
   logger.info("Fetching blogs from database");
-  const blogs = await trackQueryTime(() => Blog.find(), "Blog.find");
+  const blogs = await trackQueryTime(() => Blog.find({ isDeleted: false }), "Blog.find");
   logger.info("Fetched blogs from database");
   return new ApiResponse(statusCode.OK, blogs, "Blogs fetched successfully");
 };
@@ -475,12 +584,12 @@ export const getBlogServices = async () => {
 
 export const addBlogServices = async (blogData) => {
   try {
-    const { title, content } = blogData;
+    const { title, content , createdBy } = blogData;
 
     logger.info("Creating a new blog entry");
 
     const newBlog = await trackQueryTime(
-      () => Blog.create({ title, content }),
+      () => Blog.create({ title, content , createdBy }),
       "Blog.create"
     );
 
@@ -523,11 +632,16 @@ export const updateBlogServices = async (blogData) => {
 
 
 export const deleteBlogServices = async (blogId) => {
-  logger.info(`Deleting blog with ID: ${blogId}`);
+  logger.info(`Soft deleting blog with ID: ${blogId}`);
 
   const deletedBlog = await trackQueryTime(
-    () => Blog.findByIdAndDelete(blogId),
-    "Blog.findByIdAndDelete",
+    () =>
+      Blog.findByIdAndUpdate(
+        blogId,
+        { isDeleted: true },
+        { new: true }
+      ),
+    "Blog.findByIdAndUpdate",
     { blogId }
   );
 
@@ -536,15 +650,16 @@ export const deleteBlogServices = async (blogId) => {
     throw new apiError(statusCode.NOT_FOUND, "Blog not found");
   }
 
-  logger.info(`Blog deleted successfully: ${blogId}`);
-  return new ApiResponse(statusCode.OK, deletedBlog, "Blog deleted successfully");
+  logger.info(`Blog soft deleted successfully: ${blogId}`);
+  return new ApiResponse(statusCode.OK, deletedBlog, "Blog soft deleted successfully");
 };
+
 
 // News Services
 
 export const getNewsServices = async () => {
   logger.info("Fetching news from database");
-  const news = await trackQueryTime(() => News.find(), "News.find");
+  const news = await trackQueryTime(() => News.find({ isDeleted: false }), "News.find");
   logger.info("Fetched news from database");
   return new ApiResponse(statusCode.OK, news, "News fetched successfully");
 };
@@ -552,11 +667,11 @@ export const getNewsServices = async () => {
 // Add news
 export const addNewsServices = async (newsData) => {
   try {
-    const { title, content } = newsData;
+    const { title, content , createdBy } = newsData;
     logger.info("Creating a new news entry");
 
     const newNews = await trackQueryTime(
-      () => News.create({ title, content }),
+      () => News.create({ title, content , createdBy }),
       "News.create"
     );
 
@@ -593,20 +708,67 @@ export const updateNewsServices = async (newsData) => {
 };
 
 // Delete news
-export const deleteNewsServices = async (newsId) => {
+// export const deleteNewsServices = async (newsId) => {
+//   logger.info(`Deleting news with ID: ${newsId}`);
+
+//   const deletedNews = await trackQueryTime(
+//     () => News.findByIdAndUpdate(
+//       newsId,
+//       { isDeleted: true },
+//       { new: true }
+//     ),
+//     "News.findByIdAndUpdate",
+//     { newsId }
+//   );
+
+//   if (!deletedNews) {
+//     logger.warn(`News not found: ${newsId}`);
+//     throw new apiError(statusCode.NOT_FOUND, "News not found");
+//   }
+
+//   logger.info(`News deleted successfully: ${newsId}`);
+//   return new ApiResponse(statusCode.OK, deletedNews, "News deleted successfully");
+// };
+
+export const deleteNewsServices = async (newsId, currentUserId) => {
   logger.info(`Deleting news with ID: ${newsId}`);
 
-  const deletedNews = await trackQueryTime(
-    () => News.findByIdAndDelete(newsId),
-    "News.findByIdAndDelete",
-    { newsId }
-  );
+  const news = await News.findById(newsId).populate({
+    path: 'createdBy',
+    populate: {
+      path: 'role',
+      populate: {
+        path: 'levelId',
+      },
+    },
+  });
 
-  if (!deletedNews) {
-    logger.warn(`News not found: ${newsId}`);
+  if (!news) {
     throw new apiError(statusCode.NOT_FOUND, "News not found");
   }
 
-  logger.info(`News deleted successfully: ${newsId}`);
+  const currentUser = await User.findById(currentUserId).populate({
+    path: 'role',
+    populate: {
+      path: 'levelId',
+    },
+  });
+
+  const currentLevel = currentUser?.role?.levelId?.levelId;
+  const creatorLevel = news?.createdBy?.role?.levelId?.levelId;
+
+  console.log("currentLevel", currentLevel);
+  console.log("creatorLevel", creatorLevel);
+  
+
+  if (currentLevel == null || creatorLevel == null) {
+    throw new apiError(statusCode.BAD_REQUEST, "Could not determine user levels");
+  }
+
+  if (currentLevel > creatorLevel) {
+    throw new apiError(statusCode.FORBIDDEN, "You are not allowed to delete this record.");
+  }
+
+  const deletedNews = await News.findByIdAndDelete(newsId);
   return new ApiResponse(statusCode.OK, deletedNews, "News deleted successfully");
 };

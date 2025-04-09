@@ -23,7 +23,7 @@ const ModuleSchema = new mongoose.Schema(
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      default: null
     },
     isDeleted: {
       type: Boolean,
