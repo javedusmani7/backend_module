@@ -38,12 +38,7 @@ export const createRoleSchema = Joi.object({
     .items(
       Joi.object({
         moduleId: Joi.string().required(),
-        permission: Joi.object({
-          read: Joi.boolean().required(),
-          write: Joi.boolean().required(),
-          delete: Joi.boolean().required(),
-          update: Joi.boolean().required(),
-        }).required(),
+        permission: Joi.object().required(),
       })
     )
     .min(1)

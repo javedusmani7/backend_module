@@ -17,6 +17,10 @@ const permissionSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
       },
+      isDeleted: {
+        type: Boolean,
+        default: false,
+      },
 },{ timestamps: true });
 
 const Permission = mongoose.model("Permission", permissionSchema);

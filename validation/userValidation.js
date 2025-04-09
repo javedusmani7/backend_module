@@ -7,7 +7,8 @@ export const userRegistrationSchema = Joi.object({
 });
 
 export const userLoginSchema = Joi.object({
-  email: Joi.string().trim().min(3).max(30).required(),
+  // email: Joi.string().trim().min(3).max(30).required(),
+  identifier: Joi.string().required(),
   password: Joi.string().required(),
 });
 
@@ -29,7 +30,7 @@ export const newuserRegistrationSchema = Joi.object({
   role: Joi.string().length(24).optional(),
   userId: Joi.string().optional(),
   emailVerified: Joi.boolean().optional(),
-  ipv4: Joi.string().ip({ version: ['ipv4'] }).optional(),
+  ipv4: Joi.string().ip({ version: ['ipv4'], cidr: 'optional' }).optional(),
   ipv4Verified: Joi.boolean().optional(),
   ipv6: Joi.string().ip({ version: ['ipv6'] }).optional(),
   ipv6Verified: Joi.boolean().optional(),
@@ -38,4 +39,7 @@ export const newuserRegistrationSchema = Joi.object({
   mobileNumber: Joi.string().pattern(/^\d{10,15}$/).optional(),
   mobileVerified: Joi.boolean().optional(),
   multiLogin: Joi.boolean().optional(),
+
+  //heirarchy fields
+  share : Joi.number().strict().optional(),
 });

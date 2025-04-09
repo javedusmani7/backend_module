@@ -4,7 +4,7 @@ import Role from "../models/Role.js";
 import User from "../models/User.js";
 import { apiError } from "../utils/apiError.js";
 import { ApiResponse } from "../utils/apiResponse.js";
-import logger, { trackQueryTime } from "../logger.js";
+import logger, { trackQueryTime } from "../utils/logger.js";
 
 export const createLevelService = async (req) => {
   const { levelId } = req.body;
