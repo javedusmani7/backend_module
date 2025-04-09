@@ -35,6 +35,10 @@ const RoleSchema = new mongoose.Schema({
     ref: "Level",
     default: []
   }],
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
